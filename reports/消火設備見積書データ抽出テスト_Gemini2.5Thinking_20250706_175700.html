@@ -1,0 +1,2042 @@
+
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>実験結果レポート - 消火設備見積書データ抽出テスト_Gemini2.5Thinking</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1, h2, h3 {
+            color: #2c3e50;
+        }
+        .summary {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 5px;
+            margin-bottom: 30px;
+        }
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 15px;
+        }
+        .metric-card {
+            background-color: white;
+            padding: 15px;
+            border-radius: 5px;
+            border: 1px solid #e0e0e0;
+            text-align: center;
+        }
+        .metric-value {
+            font-size: 2em;
+            font-weight: bold;
+            margin: 5px 0;
+        }
+        .metric-label {
+            color: #666;
+            font-size: 0.9em;
+        }
+        .document-result {
+            margin-bottom: 40px;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .document-result.success {
+            border: 2px solid #28a745;
+            background-color: #f8fffe;
+        }
+        .document-result.fail {
+            border: 2px solid #007bff;
+            background-color: #f0f8ff;
+        }
+        .document-header {
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+        .document-header.success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .document-header.fail {
+            background-color: #cfe2ff;
+            color: #052c65;
+        }
+        .accuracy-badge {
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            color: white;
+        }
+        .accuracy-high { background-color: #28a745; }
+        .accuracy-medium { background-color: #ffc107; }
+        .accuracy-low { background-color: #dc3545; }
+        .field-comparison {
+            padding: 20px;
+        }
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        .comparison-table th {
+            background-color: #f8f9fa;
+            padding: 12px;
+            text-align: left;
+            font-weight: bold;
+            border-bottom: 2px solid #dee2e6;
+        }
+        .comparison-table th:nth-child(1) { width: 20%; }
+        .comparison-table th:nth-child(2) { width: 40%; }
+        .comparison-table th:nth-child(3) { width: 40%; }
+        .comparison-table td {
+            padding: 12px;
+            border-bottom: 1px solid #dee2e6;
+            vertical-align: top;
+        }
+        .comparison-table tr:hover {
+            background-color: #f8f9fa;
+        }
+        .field-name {
+            font-weight: 600;
+            color: #495057;
+        }
+        .value-mismatch {
+            color: #dc3545;
+            font-weight: bold;
+        }
+        .items-section {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+        }
+        .items-matching-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            font-size: 0.9em;
+        }
+        .items-matching-table th {
+            background-color: #e9ecef;
+            padding: 8px;
+            text-align: left;
+            font-weight: bold;
+            border: 1px solid #dee2e6;
+        }
+        .items-matching-table td {
+            padding: 8px;
+            border: 1px solid #dee2e6;
+            vertical-align: top;
+        }
+        .match-group {
+            background-color: #f8f9fa;
+        }
+        .match-status {
+            text-align: center;
+            font-weight: bold;
+        }
+        .match-high { color: #28a745; }
+        .match-medium { color: #ffc107; }
+        .match-low { color: #dc3545; }
+        .match-none { color: #6c757d; }
+        .item-expected {
+            background-color: #e3f2fd;
+        }
+        .item-actual {
+            background-color: #e8f5e9;
+        }
+        .item-field-match {
+            color: #28a745;
+            font-weight: bold;
+        }
+        .item-field-mismatch {
+            color: #dc3545;
+            font-weight: bold;
+        }
+        .match-reason {
+            font-size: 0.85em;
+            color: #6c757d;
+            font-style: italic;
+        }
+        .error-message {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+            padding: 12px 20px;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+        .timestamp {
+            color: #6c757d;
+            font-size: 0.9em;
+            margin-top: 30px;
+            text-align: center;
+        }
+        @media print {
+            body { background-color: white; }
+            .container { box-shadow: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="summary">
+            <p><strong>実験名:</strong> 消火設備見積書データ抽出テスト_Gemini2.5Thinking</p>
+            <p><strong>プロンプト:</strong> invoice_extraction_prompt_v1</p>
+            <p><strong>データセット:</strong> fire_equipment_invoice_dataset</p>
+            <p><strong>LLMエンドポイント:</strong> llm/gemini/2.5-flash-thinking</p>
+            <p><strong>実行日時:</strong> 2025年07月06日 17:56:21 〜 2025年07月06日 17:56:55</p>
+            
+            <div class="summary-grid">
+                <div class="metric-card">
+                    <div class="metric-label">スコア</div>
+                    <div class="metric-value" style="color: #ffc107">
+                        32.0 / 45.0
+                    </div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">処理文書数</div>
+                    <div class="metric-value">1</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">成功数</div>
+                    <div class="metric-value" style="color: #28a745">1</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">失敗数</div>
+                    <div class="metric-value" style="color: #dc3545">0</div>
+                </div>
+            </div>
+        </div>
+        
+        
+        <div class="document-result fail">
+            <div class="document-header fail">
+                <div>データセットID: fpvwlbus2aphvr21jop66n79</div>
+            </div>
+            
+            <div class="field-comparison">
+                
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>フィールド</th>
+                            <th>期待値</th>
+                            <th>実際値</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        
+                        <tr>
+                            <td class="field-name">doc_type</td>
+                            
+                                <td>
+                                    quotation
+                                </td>
+                                <td>
+                                    <span class="value-mismatch">
+                                        unknown
+                                    </span>
+                                </td>
+                            
+                        </tr>
+                        
+                        <tr>
+                            <td class="field-name">doc_title</td>
+                            
+                                <td>
+                                    消火設備修繕工事
+                                </td>
+                                <td>
+                                    <span >
+                                        消火設備修繕工事
+                                    </span>
+                                </td>
+                            
+                        </tr>
+                        
+                        <tr>
+                            <td class="field-name">doc_number</td>
+                            
+                                <td>
+                                    1
+                                </td>
+                                <td>
+                                    <span >
+                                        1
+                                    </span>
+                                </td>
+                            
+                        </tr>
+                        
+                        <tr>
+                            <td class="field-name">doc_date</td>
+                            
+                                <td>
+                                    (空)
+                                </td>
+                                <td>
+                                    <span >
+                                        (空)
+                                    </span>
+                                </td>
+                            
+                        </tr>
+                        
+                        <tr>
+                            <td class="field-name">doc_transaction</td>
+                            
+                                <td>
+                                    (空)
+                                </td>
+                                <td>
+                                    <span >
+                                        (空)
+                                    </span>
+                                </td>
+                            
+                        </tr>
+                        
+                        <tr>
+                            <td class="field-name">destination</td>
+                            
+                                <td>
+                                    (空)
+                                </td>
+                                <td>
+                                    <span >
+                                        (空)
+                                    </span>
+                                </td>
+                            
+                        </tr>
+                        
+                        <tr>
+                            <td class="field-name">destination_customer_id</td>
+                            
+                                <td>
+                                    0
+                                </td>
+                                <td>
+                                    <span class="value-mismatch">
+                                        (空)
+                                    </span>
+                                </td>
+                            
+                        </tr>
+                        
+                        <tr>
+                            <td class="field-name">issuer</td>
+                            
+                                <td>
+                                    消火設備工事株式会社
+                                </td>
+                                <td>
+                                    <span >
+                                        消火設備工事株式会社
+                                    </span>
+                                </td>
+                            
+                        </tr>
+                        
+                        <tr>
+                            <td class="field-name">issuer_customer_id</td>
+                            
+                                <td>
+                                    0
+                                </td>
+                                <td>
+                                    <span class="value-mismatch">
+                                        (空)
+                                    </span>
+                                </td>
+                            
+                        </tr>
+                        
+                        <tr>
+                            <td class="field-name">issuer_address</td>
+                            
+                                <td>
+                                    (空)
+                                </td>
+                                <td>
+                                    <span >
+                                        (空)
+                                    </span>
+                                </td>
+                            
+                        </tr>
+                        
+                        <tr>
+                            <td class="field-name">issuer_zip</td>
+                            
+                                <td>
+                                    (空)
+                                </td>
+                                <td>
+                                    <span >
+                                        (空)
+                                    </span>
+                                </td>
+                            
+                        </tr>
+                        
+                        <tr>
+                            <td class="field-name">issuer_phone_number</td>
+                            
+                                <td>
+                                    (空)
+                                </td>
+                                <td>
+                                    <span >
+                                        (空)
+                                    </span>
+                                </td>
+                            
+                        </tr>
+                        
+                        <tr>
+                            <td class="field-name">construction_name</td>
+                            
+                                <td>
+                                    (空)
+                                </td>
+                                <td>
+                                    <span >
+                                        (空)
+                                    </span>
+                                </td>
+                            
+                        </tr>
+                        
+                        <tr>
+                            <td class="field-name">construction_site</td>
+                            
+                                <td>
+                                    (空)
+                                </td>
+                                <td>
+                                    <span >
+                                        (空)
+                                    </span>
+                                </td>
+                            
+                        </tr>
+                        
+                        <tr>
+                            <td class="field-name">construction_period</td>
+                            
+                                <td>
+                                    (空)
+                                </td>
+                                <td>
+                                    <span >
+                                        (空)
+                                    </span>
+                                </td>
+                            
+                        </tr>
+                        
+                        <tr>
+                            <td class="field-name">payment_terms</td>
+                            
+                                <td>
+                                    (空)
+                                </td>
+                                <td>
+                                    <span >
+                                        (空)
+                                    </span>
+                                </td>
+                            
+                        </tr>
+                        
+                        <tr>
+                            <td class="field-name">expiration_date</td>
+                            
+                                <td>
+                                    (空)
+                                </td>
+                                <td>
+                                    <span >
+                                        (空)
+                                    </span>
+                                </td>
+                            
+                        </tr>
+                        
+                        <tr>
+                            <td class="field-name">sub_total</td>
+                            
+                                <td>
+                                    3806310
+                                </td>
+                                <td>
+                                    <span >
+                                        3806310
+                                    </span>
+                                </td>
+                            
+                        </tr>
+                        
+                        <tr>
+                            <td class="field-name">tax_type</td>
+                            
+                                <td>
+                                    external
+                                </td>
+                                <td>
+                                    <span >
+                                        external
+                                    </span>
+                                </td>
+                            
+                        </tr>
+                        
+                        <tr>
+                            <td class="field-name">tax_price</td>
+                            
+                                <td>
+                                    0
+                                </td>
+                                <td>
+                                    <span >
+                                        0
+                                    </span>
+                                </td>
+                            
+                        </tr>
+                        
+                        <tr>
+                            <td class="field-name">total_price</td>
+                            
+                                <td>
+                                    5648310
+                                </td>
+                                <td>
+                                    <span >
+                                        5648310
+                                    </span>
+                                </td>
+                            
+                        </tr>
+                        
+                        <tr>
+                            <td class="field-name">t_number</td>
+                            
+                                <td>
+                                    (空)
+                                </td>
+                                <td>
+                                    <span >
+                                        (空)
+                                    </span>
+                                </td>
+                            
+                        </tr>
+                        
+                        <tr>
+                            <td class="field-name">items</td>
+                            
+                                <td colspan="4" style="padding: 0;">
+                                    
+                                    <div style="padding: 15px;">
+                                        <h4 style="margin: 0 0 10px 0;">アイテム明細の比較</h4>
+                                        <table style="width: 100%; border-collapse: collapse; font-size: 0.9em;">
+                                            <thead>
+                                                <tr style="background-color: #e9ecef;">
+                                                    <th style="padding: 8px; text-align: left; border: 1px solid #dee2e6;">項目</th>
+                                                    <th style="padding: 8px; text-align: left; border: 1px solid #dee2e6;">name</th>
+                                                    <th style="padding: 8px; text-align: left; border: 1px solid #dee2e6;">spec</th>
+                                                    <th style="padding: 8px; text-align: center; border: 1px solid #dee2e6;">quantity</th>
+                                                    <th style="padding: 8px; text-align: center; border: 1px solid #dee2e6;">unit</th>
+                                                    <th style="padding: 8px; text-align: right; border: 1px solid #dee2e6;">price</th>
+                                                    <th style="padding: 8px; text-align: right; border: 1px solid #dee2e6;">sub_total</th>
+                                                    <th style="padding: 8px; text-align: left; border: 1px solid #dee2e6;">note</th>
+                                                    <th style="padding: 8px; text-align: left; border: 1px solid #dee2e6;">account_item</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                
+                                                <tr style="background-color: #e3f2fd;">
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; font-weight: bold;">期待値</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6;">ホンプモータユニット</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6;">-</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; text-align: center;">1</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; text-align: center;">台</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; text-align: right;">0円</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; text-align: right;">0円</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6;">支給品</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6;">材料費</td>
+                                                </tr>
+                                                <tr style="background-color: #e8f5e9;">
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; font-weight: bold;">実際値</td>
+                                                    
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6;">
+                                                            <span class="item-field-match">
+                                                                ホンプモータユニット
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6;">
+                                                            <span class="item-field-match">
+                                                                -
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6; text-align: center;">
+                                                            <span class="item-field-match">
+                                                                1
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6; text-align: center;">
+                                                            <span class="item-field-match">
+                                                                台
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6; text-align: right;">
+                                                            <span class="item-field-match">
+                                                                0円
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6; text-align: right;">
+                                                            <span class="item-field-match">
+                                                                0円
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6;">
+                                                            <span class="item-field-mismatch">
+                                                                消火設備
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6;">
+                                                            <span class="item-field-match">
+                                                                材料費
+                                                            </span>
+                                                        </td>
+                                                    
+                                                </tr>
+                                                
+                                                <tr><td colspan="9" style="height: 10px; border: none;"></td></tr>
+                                                
+                                                
+                                                <tr style="background-color: #e3f2fd;">
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; font-weight: bold;">期待値</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6;">消防用補助高架水槽</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6;">-</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; text-align: center;">1</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; text-align: center;">台</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; text-align: right;">0円</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; text-align: right;">0円</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6;">支給品</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6;">材料費</td>
+                                                </tr>
+                                                <tr style="background-color: #e8f5e9;">
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; font-weight: bold;">実際値</td>
+                                                    
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6;">
+                                                            <span class="item-field-match">
+                                                                消防用補助高架水槽
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6;">
+                                                            <span class="item-field-match">
+                                                                -
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6; text-align: center;">
+                                                            <span class="item-field-mismatch">
+                                                                3053
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6; text-align: center;">
+                                                            <span class="item-field-match">
+                                                                台
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6; text-align: right;">
+                                                            <span class="item-field-match">
+                                                                0円
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6; text-align: right;">
+                                                            <span class="item-field-match">
+                                                                0円
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6;">
+                                                            <span class="item-field-match">
+                                                                支給品
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6;">
+                                                            <span class="item-field-match">
+                                                                材料費
+                                                            </span>
+                                                        </td>
+                                                    
+                                                </tr>
+                                                
+                                                <tr><td colspan="9" style="height: 10px; border: none;"></td></tr>
+                                                
+                                                
+                                                <tr style="background-color: #e3f2fd;">
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; font-weight: bold;">期待値</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6;">消火栓箱（放水銃）</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6;">-</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; text-align: center;">17</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; text-align: center;">台</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; text-align: right;">0円</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; text-align: right;">0円</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6;">支給品</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6;">材料費</td>
+                                                </tr>
+                                                <tr style="background-color: #e8f5e9;">
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; font-weight: bold;">実際値</td>
+                                                    
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6;">
+                                                            <span class="item-field-match">
+                                                                消火栓箱（放水銃
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6;">
+                                                            <span class="item-field-match">
+                                                                -
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6; text-align: center;">
+                                                            <span class="item-field-match">
+                                                                17
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6; text-align: center;">
+                                                            <span class="item-field-match">
+                                                                台
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6; text-align: right;">
+                                                            <span class="item-field-match">
+                                                                0円
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6; text-align: right;">
+                                                            <span class="item-field-match">
+                                                                0円
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6;">
+                                                            <span class="item-field-match">
+                                                                支給品
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6;">
+                                                            <span class="item-field-match">
+                                                                材料費
+                                                            </span>
+                                                        </td>
+                                                    
+                                                </tr>
+                                                
+                                                <tr><td colspan="9" style="height: 10px; border: none;"></td></tr>
+                                                
+                                                
+                                                <tr style="background-color: #e3f2fd;">
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; font-weight: bold;">期待値</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6;">仕切弁 10K 50A UV型</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6;">-</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; text-align: center;">1</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; text-align: center;">台</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; text-align: right;">11,000円</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; text-align: right;">11,000円</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6;">-</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6;">材料費</td>
+                                                </tr>
+                                                <tr style="background-color: #e8f5e9;">
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; font-weight: bold;">実際値</td>
+                                                    
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6;">
+                                                            <span class="item-field-match">
+                                                                仕切弁
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6;">
+                                                            <span class="item-field-mismatch">
+                                                                10K 50A UV型
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6; text-align: center;">
+                                                            <span class="item-field-match">
+                                                                1
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6; text-align: center;">
+                                                            <span class="item-field-match">
+                                                                台
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6; text-align: right;">
+                                                            <span class="item-field-match">
+                                                                11,000円
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6; text-align: right;">
+                                                            <span class="item-field-match">
+                                                                11,000円
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6;">
+                                                            <span class="item-field-match">
+                                                                -
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6;">
+                                                            <span class="item-field-match">
+                                                                材料費
+                                                            </span>
+                                                        </td>
+                                                    
+                                                </tr>
+                                                
+                                                <tr><td colspan="9" style="height: 10px; border: none;"></td></tr>
+                                                
+                                                
+                                                <tr style="background-color: #e3f2fd;">
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; font-weight: bold;">期待値</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6;">仕切弁 10K 40A UV型</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6;">-</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; text-align: center;">2</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; text-align: center;">台</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; text-align: right;">7,100円</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; text-align: right;">14,200円</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6;">-</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6;">材料費</td>
+                                                </tr>
+                                                <tr style="background-color: #e8f5e9;">
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; font-weight: bold;">実際値</td>
+                                                    
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6;">
+                                                            <span class="item-field-match">
+                                                                仕切弁
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6;">
+                                                            <span class="item-field-mismatch">
+                                                                10K 40A UV型
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6; text-align: center;">
+                                                            <span class="item-field-match">
+                                                                2
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6; text-align: center;">
+                                                            <span class="item-field-match">
+                                                                台
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6; text-align: right;">
+                                                            <span class="item-field-mismatch">
+                                                                5,200円
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6; text-align: right;">
+                                                            <span class="item-field-mismatch">
+                                                                10,400円
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6;">
+                                                            <span class="item-field-match">
+                                                                -
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6;">
+                                                            <span class="item-field-match">
+                                                                材料費
+                                                            </span>
+                                                        </td>
+                                                    
+                                                </tr>
+                                                
+                                                <tr><td colspan="9" style="height: 10px; border: none;"></td></tr>
+                                                
+                                                
+                                                <tr style="background-color: #e3f2fd;">
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; font-weight: bold;">期待値</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6;">仕切弁 10K 32A UV型</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6;">-</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; text-align: center;">2</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; text-align: center;">台</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; text-align: right;">5,600円</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; text-align: right;">11,200円</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6;">-</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6;">材料費</td>
+                                                </tr>
+                                                <tr style="background-color: #e8f5e9;">
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; font-weight: bold;">実際値</td>
+                                                    
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6;">
+                                                            <span class="item-field-match">
+                                                                仕切弁
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6;">
+                                                            <span class="item-field-mismatch">
+                                                                10K 32A UV型
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6; text-align: center;">
+                                                            <span class="item-field-match">
+                                                                2
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6; text-align: center;">
+                                                            <span class="item-field-match">
+                                                                台
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6; text-align: right;">
+                                                            <span class="item-field-match">
+                                                                5,600円
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6; text-align: right;">
+                                                            <span class="item-field-match">
+                                                                11,200円
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6;">
+                                                            <span class="item-field-match">
+                                                                -
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6;">
+                                                            <span class="item-field-match">
+                                                                材料費
+                                                            </span>
+                                                        </td>
+                                                    
+                                                </tr>
+                                                
+                                                <tr><td colspan="9" style="height: 10px; border: none;"></td></tr>
+                                                
+                                                
+                                                <tr style="background-color: #e3f2fd;">
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; font-weight: bold;">期待値</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6;">止弁 10K 40A 5V型</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6;">-</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; text-align: center;">1</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; text-align: center;">台</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; text-align: right;">6,200円</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; text-align: right;">6,200円</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6;">-</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6;">材料費</td>
+                                                </tr>
+                                                <tr style="background-color: #e8f5e9;">
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; font-weight: bold;">実際値</td>
+                                                    
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6;">
+                                                            <span class="item-field-match">
+                                                                止弁
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6;">
+                                                            <span class="item-field-mismatch">
+                                                                10K 40A 5V型
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6; text-align: center;">
+                                                            <span class="item-field-match">
+                                                                1
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6; text-align: center;">
+                                                            <span class="item-field-match">
+                                                                台
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6; text-align: right;">
+                                                            <span class="item-field-match">
+                                                                6,200円
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6; text-align: right;">
+                                                            <span class="item-field-match">
+                                                                6,200円
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6;">
+                                                            <span class="item-field-match">
+                                                                -
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6;">
+                                                            <span class="item-field-match">
+                                                                材料費
+                                                            </span>
+                                                        </td>
+                                                    
+                                                </tr>
+                                                
+                                                <tr><td colspan="9" style="height: 10px; border: none;"></td></tr>
+                                                
+                                                
+                                                <tr style="background-color: #e3f2fd;">
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; font-weight: bold;">期待値</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6;">ストレーナ 10K 50A</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6;">消防認定品</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; text-align: center;">1</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; text-align: center;">台</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; text-align: right;">15,250円</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; text-align: right;">15,250円</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6;">-</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6;">材料費</td>
+                                                </tr>
+                                                <tr style="background-color: #e8f5e9;">
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; font-weight: bold;">実際値</td>
+                                                    
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6;">
+                                                            <span class="item-field-match">
+                                                                ストレーナ
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6;">
+                                                            <span class="item-field-mismatch">
+                                                                10K 50A 消防認定品
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6; text-align: center;">
+                                                            <span class="item-field-match">
+                                                                1
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6; text-align: center;">
+                                                            <span class="item-field-match">
+                                                                台
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6; text-align: right;">
+                                                            <span class="item-field-match">
+                                                                15,250円
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6; text-align: right;">
+                                                            <span class="item-field-match">
+                                                                15,250円
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6;">
+                                                            <span class="item-field-match">
+                                                                -
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6;">
+                                                            <span class="item-field-match">
+                                                                材料費
+                                                            </span>
+                                                        </td>
+                                                    
+                                                </tr>
+                                                
+                                                <tr><td colspan="9" style="height: 10px; border: none;"></td></tr>
+                                                
+                                                
+                                                <tr style="background-color: #e3f2fd;">
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; font-weight: bold;">期待値</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6;">仕送調整弁 10K 40A</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6;">-</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; text-align: center;">1</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; text-align: center;">台</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; text-align: right;">310,000円</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; text-align: right;">310,000円</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6;">-</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6;">材料費</td>
+                                                </tr>
+                                                <tr style="background-color: #e8f5e9;">
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; font-weight: bold;">実際値</td>
+                                                    
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6;">
+                                                            <span class="item-field-match">
+                                                                仕送調整弁
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6;">
+                                                            <span class="item-field-mismatch">
+                                                                10K 40A
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6; text-align: center;">
+                                                            <span class="item-field-match">
+                                                                1
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6; text-align: center;">
+                                                            <span class="item-field-match">
+                                                                台
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6; text-align: right;">
+                                                            <span class="item-field-match">
+                                                                310,000円
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6; text-align: right;">
+                                                            <span class="item-field-match">
+                                                                310,000円
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6;">
+                                                            <span class="item-field-match">
+                                                                -
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6;">
+                                                            <span class="item-field-match">
+                                                                材料費
+                                                            </span>
+                                                        </td>
+                                                    
+                                                </tr>
+                                                
+                                                <tr><td colspan="9" style="height: 10px; border: none;"></td></tr>
+                                                
+                                                
+                                                <tr style="background-color: #e3f2fd;">
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; font-weight: bold;">期待値</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6;">プレッシブルチャージ 25A×50A</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6;">消防認定品</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; text-align: center;">1</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; text-align: center;">本</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; text-align: right;">13,300円</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; text-align: right;">13,300円</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6;">-</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6;">材料費</td>
+                                                </tr>
+                                                <tr style="background-color: #e8f5e9;">
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; font-weight: bold;">実際値</td>
+                                                    
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6;">
+                                                            <span class="item-field-match">
+                                                                プレッシブルチャージ
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6;">
+                                                            <span class="item-field-mismatch">
+                                                                25A×50A 消防認定品
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6; text-align: center;">
+                                                            <span class="item-field-match">
+                                                                1
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6; text-align: center;">
+                                                            <span class="item-field-match">
+                                                                本
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6; text-align: right;">
+                                                            <span class="item-field-match">
+                                                                13,300円
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6; text-align: right;">
+                                                            <span class="item-field-match">
+                                                                13,300円
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6;">
+                                                            <span class="item-field-match">
+                                                                -
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6;">
+                                                            <span class="item-field-match">
+                                                                材料費
+                                                            </span>
+                                                        </td>
+                                                    
+                                                </tr>
+                                                
+                                                <tr><td colspan="9" style="height: 10px; border: none;"></td></tr>
+                                                
+                                                
+                                                <tr style="background-color: #e3f2fd;">
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; font-weight: bold;">期待値</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6;">ップレキシブルチューブ 40A×300L</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6;">消防認定品</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; text-align: center;">1</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; text-align: center;">本</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; text-align: right;">7,300円</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; text-align: right;">7,300円</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6;">-</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6;">材料費</td>
+                                                </tr>
+                                                <tr style="background-color: #e8f5e9;">
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; font-weight: bold;">実際値</td>
+                                                    
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6;">
+                                                            <span class="item-field-match">
+                                                                ップレキシブルチューブ
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6;">
+                                                            <span class="item-field-mismatch">
+                                                                40A×300L 消防認定品
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6; text-align: center;">
+                                                            <span class="item-field-match">
+                                                                1
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6; text-align: center;">
+                                                            <span class="item-field-match">
+                                                                本
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6; text-align: right;">
+                                                            <span class="item-field-match">
+                                                                7,300円
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6; text-align: right;">
+                                                            <span class="item-field-match">
+                                                                7,300円
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6;">
+                                                            <span class="item-field-match">
+                                                                -
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6;">
+                                                            <span class="item-field-match">
+                                                                材料費
+                                                            </span>
+                                                        </td>
+                                                    
+                                                </tr>
+                                                
+                                                <tr><td colspan="9" style="height: 10px; border: none;"></td></tr>
+                                                
+                                                
+                                                <tr style="background-color: #e3f2fd;">
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; font-weight: bold;">期待値</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6;">プレキシブルチューブ 32A×30ML</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6;">消防認定品</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; text-align: center;">1</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; text-align: center;">本</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; text-align: right;">7,000円</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; text-align: right;">7,000円</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6;">-</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6;">材料費</td>
+                                                </tr>
+                                                <tr style="background-color: #e8f5e9;">
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; font-weight: bold;">実際値</td>
+                                                    
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6;">
+                                                            <span class="item-field-match">
+                                                                プレキシブルチューブ
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6;">
+                                                            <span class="item-field-mismatch">
+                                                                32A×30ML 消防認定品
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6; text-align: center;">
+                                                            <span class="item-field-match">
+                                                                1
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6; text-align: center;">
+                                                            <span class="item-field-match">
+                                                                本
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6; text-align: right;">
+                                                            <span class="item-field-match">
+                                                                7,000円
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6; text-align: right;">
+                                                            <span class="item-field-match">
+                                                                7,000円
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6;">
+                                                            <span class="item-field-match">
+                                                                -
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6;">
+                                                            <span class="item-field-match">
+                                                                材料費
+                                                            </span>
+                                                        </td>
+                                                    
+                                                </tr>
+                                                
+                                                <tr><td colspan="9" style="height: 10px; border: none;"></td></tr>
+                                                
+                                                
+                                                <tr style="background-color: #e3f2fd;">
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; font-weight: bold;">期待値</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6;">鋼管 G-3452 50A</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6;">-</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; text-align: center;">120</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; text-align: center;">M</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; text-align: right;">2,697円</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; text-align: right;">323,640円</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6;">-</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6;">材料費</td>
+                                                </tr>
+                                                <tr style="background-color: #e8f5e9;">
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; font-weight: bold;">実際値</td>
+                                                    
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6;">
+                                                            <span class="item-field-match">
+                                                                鋼管 G-3452
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6;">
+                                                            <span class="item-field-mismatch">
+                                                                50A
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6; text-align: center;">
+                                                            <span class="item-field-match">
+                                                                120
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6; text-align: center;">
+                                                            <span class="item-field-match">
+                                                                M
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6; text-align: right;">
+                                                            <span class="item-field-match">
+                                                                2,697円
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6; text-align: right;">
+                                                            <span class="item-field-match">
+                                                                323,640円
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6;">
+                                                            <span class="item-field-match">
+                                                                -
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6;">
+                                                            <span class="item-field-match">
+                                                                材料費
+                                                            </span>
+                                                        </td>
+                                                    
+                                                </tr>
+                                                
+                                                <tr><td colspan="9" style="height: 10px; border: none;"></td></tr>
+                                                
+                                                
+                                                <tr style="background-color: #e3f2fd;">
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; font-weight: bold;">期待値</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6;">鋼管 G-3452 40A</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6;">-</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; text-align: center;">272</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; text-align: center;">M</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; text-align: right;">1,895円</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; text-align: right;">515,440円</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6;">-</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6;">材料費</td>
+                                                </tr>
+                                                <tr style="background-color: #e8f5e9;">
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; font-weight: bold;">実際値</td>
+                                                    
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6;">
+                                                            <span class="item-field-match">
+                                                                鋼管 G-3452
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6;">
+                                                            <span class="item-field-mismatch">
+                                                                40A
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6; text-align: center;">
+                                                            <span class="item-field-match">
+                                                                272
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6; text-align: center;">
+                                                            <span class="item-field-match">
+                                                                M
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6; text-align: right;">
+                                                            <span class="item-field-match">
+                                                                1,895円
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6; text-align: right;">
+                                                            <span class="item-field-match">
+                                                                515,440円
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6;">
+                                                            <span class="item-field-match">
+                                                                -
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6;">
+                                                            <span class="item-field-match">
+                                                                材料費
+                                                            </span>
+                                                        </td>
+                                                    
+                                                </tr>
+                                                
+                                                <tr><td colspan="9" style="height: 10px; border: none;"></td></tr>
+                                                
+                                                
+                                                <tr style="background-color: #e3f2fd;">
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; font-weight: bold;">期待値</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6;">鋼管 G-3452 32A 25A</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6;">-</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; text-align: center;">16</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; text-align: center;">M</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; text-align: right;">1,246円</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; text-align: right;">19,936円</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6;">-</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6;">材料費</td>
+                                                </tr>
+                                                <tr style="background-color: #e8f5e9;">
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; font-weight: bold;">実際値</td>
+                                                    
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6;">
+                                                            <span class="item-field-match">
+                                                                鋼管 G-3452
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6;">
+                                                            <span class="item-field-mismatch">
+                                                                32A 25A
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6; text-align: center;">
+                                                            <span class="item-field-match">
+                                                                16
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6; text-align: center;">
+                                                            <span class="item-field-match">
+                                                                M
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6; text-align: right;">
+                                                            <span class="item-field-match">
+                                                                1,246円
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6; text-align: right;">
+                                                            <span class="item-field-match">
+                                                                19,936円
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6;">
+                                                            <span class="item-field-match">
+                                                                -
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6;">
+                                                            <span class="item-field-match">
+                                                                材料費
+                                                            </span>
+                                                        </td>
+                                                    
+                                                </tr>
+                                                
+                                                <tr><td colspan="9" style="height: 10px; border: none;"></td></tr>
+                                                
+                                                
+                                                <tr style="background-color: #e3f2fd;">
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; font-weight: bold;">期待値</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6;">鋼管 G-3452 50A VF</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6;">-</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; text-align: center;">76</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; text-align: center;">M</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; text-align: right;">5,369円</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; text-align: right;">408,044円</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6;">-</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6;">材料費</td>
+                                                </tr>
+                                                <tr style="background-color: #e8f5e9;">
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; font-weight: bold;">実際値</td>
+                                                    
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6;">
+                                                            <span class="item-field-match">
+                                                                鋼管 G-3452
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6;">
+                                                            <span class="item-field-mismatch">
+                                                                50A VF
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6; text-align: center;">
+                                                            <span class="item-field-match">
+                                                                76
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6; text-align: center;">
+                                                            <span class="item-field-match">
+                                                                M
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6; text-align: right;">
+                                                            <span class="item-field-match">
+                                                                5,369円
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6; text-align: right;">
+                                                            <span class="item-field-match">
+                                                                408,044円
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6;">
+                                                            <span class="item-field-match">
+                                                                -
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6;">
+                                                            <span class="item-field-match">
+                                                                材料費
+                                                            </span>
+                                                        </td>
+                                                    
+                                                </tr>
+                                                
+                                                <tr><td colspan="9" style="height: 10px; border: none;"></td></tr>
+                                                
+                                                
+                                                <tr style="background-color: #e3f2fd;">
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; font-weight: bold;">期待値</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6;">継手類</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6;">-</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; text-align: center;">1</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; text-align: center;">式</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; text-align: right;">1,000,000円</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; text-align: right;">1,000,000円</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6;">-</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6;">材料費</td>
+                                                </tr>
+                                                <tr style="background-color: #e8f5e9;">
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; font-weight: bold;">実際値</td>
+                                                    
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6;">
+                                                            <span class="item-field-match">
+                                                                継手類
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6;">
+                                                            <span class="item-field-match">
+                                                                -
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6; text-align: center;">
+                                                            <span class="item-field-match">
+                                                                1
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6; text-align: center;">
+                                                            <span class="item-field-match">
+                                                                式
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6; text-align: right;">
+                                                            <span class="item-field-match">
+                                                                1,000,000円
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6; text-align: right;">
+                                                            <span class="item-field-match">
+                                                                1,000,000円
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6;">
+                                                            <span class="item-field-match">
+                                                                -
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6;">
+                                                            <span class="item-field-match">
+                                                                材料費
+                                                            </span>
+                                                        </td>
+                                                    
+                                                </tr>
+                                                
+                                                <tr><td colspan="9" style="height: 10px; border: none;"></td></tr>
+                                                
+                                                
+                                                <tr style="background-color: #e3f2fd;">
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; font-weight: bold;">期待値</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6;">仕舞物材</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6;">-</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; text-align: center;">1</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; text-align: center;">式</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; text-align: right;">300,000円</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; text-align: right;">300,000円</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6;">-</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6;">材料費</td>
+                                                </tr>
+                                                <tr style="background-color: #e8f5e9;">
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; font-weight: bold;">実際値</td>
+                                                    
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6;">
+                                                            <span class="item-field-match">
+                                                                仕舞物材
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6;">
+                                                            <span class="item-field-match">
+                                                                -
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6; text-align: center;">
+                                                            <span class="item-field-match">
+                                                                1
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6; text-align: center;">
+                                                            <span class="item-field-match">
+                                                                式
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6; text-align: right;">
+                                                            <span class="item-field-match">
+                                                                300,000円
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6; text-align: right;">
+                                                            <span class="item-field-match">
+                                                                300,000円
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6;">
+                                                            <span class="item-field-match">
+                                                                -
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6;">
+                                                            <span class="item-field-match">
+                                                                材料費
+                                                            </span>
+                                                        </td>
+                                                    
+                                                </tr>
+                                                
+                                                <tr><td colspan="9" style="height: 10px; border: none;"></td></tr>
+                                                
+                                                
+                                                <tr style="background-color: #e3f2fd;">
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; font-weight: bold;">期待値</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6;">継科費・雑材</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6;">-</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; text-align: center;">1</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; text-align: center;">式</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; text-align: right;">150,000円</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; text-align: right;">150,000円</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6;">-</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6;">経費</td>
+                                                </tr>
+                                                <tr style="background-color: #e8f5e9;">
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; font-weight: bold;">実際値</td>
+                                                    
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6;">
+                                                            <span class="item-field-match">
+                                                                継科費・雑材
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6;">
+                                                            <span class="item-field-match">
+                                                                -
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6; text-align: center;">
+                                                            <span class="item-field-match">
+                                                                1
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6; text-align: center;">
+                                                            <span class="item-field-match">
+                                                                式
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6; text-align: right;">
+                                                            <span class="item-field-match">
+                                                                150,000円
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6; text-align: right;">
+                                                            <span class="item-field-match">
+                                                                150,000円
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6;">
+                                                            <span class="item-field-match">
+                                                                -
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6;">
+                                                            <span class="item-field-match">
+                                                                経費
+                                                            </span>
+                                                        </td>
+                                                    
+                                                </tr>
+                                                
+                                                <tr><td colspan="9" style="height: 10px; border: none;"></td></tr>
+                                                
+                                                
+                                                <tr style="background-color: #e3f2fd;">
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; font-weight: bold;">期待値</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6;">配管工事費</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6;">-</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; text-align: center;">1</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; text-align: center;">式</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; text-align: right;">1,400,000円</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; text-align: right;">1,400,000円</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6;">-</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6;">外注費</td>
+                                                </tr>
+                                                <tr style="background-color: #e8f5e9;">
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; font-weight: bold;">実際値</td>
+                                                    
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6;">
+                                                            <span class="item-field-match">
+                                                                配管工事費
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6;">
+                                                            <span class="item-field-match">
+                                                                -
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6; text-align: center;">
+                                                            <span class="item-field-match">
+                                                                1
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6; text-align: center;">
+                                                            <span class="item-field-match">
+                                                                式
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6; text-align: right;">
+                                                            <span class="item-field-match">
+                                                                1,400,000円
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6; text-align: right;">
+                                                            <span class="item-field-match">
+                                                                1,400,000円
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6;">
+                                                            <span class="item-field-match">
+                                                                -
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6;">
+                                                            <span class="item-field-match">
+                                                                外注費
+                                                            </span>
+                                                        </td>
+                                                    
+                                                </tr>
+                                                
+                                                <tr><td colspan="9" style="height: 10px; border: none;"></td></tr>
+                                                
+                                                
+                                                <tr style="background-color: #e3f2fd;">
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; font-weight: bold;">期待値</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6;">諸経費取付調整費</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6;">-</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; text-align: center;">1</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; text-align: center;">式</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; text-align: right;">210,000円</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; text-align: right;">210,000円</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6;">-</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6;">経費</td>
+                                                </tr>
+                                                <tr style="background-color: #e8f5e9;">
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; font-weight: bold;">実際値</td>
+                                                    
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6;">
+                                                            <span class="item-field-match">
+                                                                諸経費取付調整費
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6;">
+                                                            <span class="item-field-match">
+                                                                -
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6; text-align: center;">
+                                                            <span class="item-field-match">
+                                                                1
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6; text-align: center;">
+                                                            <span class="item-field-match">
+                                                                式
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6; text-align: right;">
+                                                            <span class="item-field-match">
+                                                                210,000円
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6; text-align: right;">
+                                                            <span class="item-field-match">
+                                                                210,000円
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6;">
+                                                            <span class="item-field-match">
+                                                                -
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6;">
+                                                            <span class="item-field-match">
+                                                                経費
+                                                            </span>
+                                                        </td>
+                                                    
+                                                </tr>
+                                                
+                                                <tr><td colspan="9" style="height: 10px; border: none;"></td></tr>
+                                                
+                                                
+                                                <tr style="background-color: #e3f2fd;">
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; font-weight: bold;">期待値</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6;">支持金物据工取付費</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6;">-</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; text-align: center;">1</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; text-align: center;">式</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; text-align: right;">110,000円</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; text-align: right;">110,000円</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6;">-</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6;">外注費</td>
+                                                </tr>
+                                                <tr style="background-color: #e8f5e9;">
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; font-weight: bold;">実際値</td>
+                                                    
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6;">
+                                                            <span class="item-field-match">
+                                                                支持金物据工取付費
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6;">
+                                                            <span class="item-field-match">
+                                                                -
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6; text-align: center;">
+                                                            <span class="item-field-match">
+                                                                1
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6; text-align: center;">
+                                                            <span class="item-field-match">
+                                                                式
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6; text-align: right;">
+                                                            <span class="item-field-match">
+                                                                110,000円
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6; text-align: right;">
+                                                            <span class="item-field-match">
+                                                                110,000円
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6;">
+                                                            <span class="item-field-match">
+                                                                -
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6;">
+                                                            <span class="item-field-match">
+                                                                外注費
+                                                            </span>
+                                                        </td>
+                                                    
+                                                </tr>
+                                                
+                                                <tr><td colspan="9" style="height: 10px; border: none;"></td></tr>
+                                                
+                                                
+                                                <tr style="background-color: #e3f2fd;">
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; font-weight: bold;">期待値</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6;">スリーブ・インサート工事費</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6;">-</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; text-align: center;">1</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; text-align: center;">式</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; text-align: right;">70,000円</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; text-align: right;">70,000円</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6;">-</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6;">外注費</td>
+                                                </tr>
+                                                <tr style="background-color: #e8f5e9;">
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; font-weight: bold;">実際値</td>
+                                                    
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6;">
+                                                            <span class="item-field-match">
+                                                                スリーブ・インサート工事費
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6;">
+                                                            <span class="item-field-mismatch">
+                                                                附属
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6; text-align: center;">
+                                                            <span class="item-field-match">
+                                                                1
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6; text-align: center;">
+                                                            <span class="item-field-match">
+                                                                式
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6; text-align: right;">
+                                                            <span class="item-field-match">
+                                                                70,000円
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6; text-align: right;">
+                                                            <span class="item-field-match">
+                                                                70,000円
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6;">
+                                                            <span class="item-field-match">
+                                                                -
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6;">
+                                                            <span class="item-field-match">
+                                                                外注費
+                                                            </span>
+                                                        </td>
+                                                    
+                                                </tr>
+                                                
+                                                <tr><td colspan="9" style="height: 10px; border: none;"></td></tr>
+                                                
+                                                
+                                                <tr style="background-color: #e3f2fd;">
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; font-weight: bold;">期待値</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6;">員搬入工具費</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6;">-</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; text-align: center;">1</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; text-align: center;">式</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; text-align: right;">52,000円</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; text-align: right;">52,000円</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6;">-</td>
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6;">経費</td>
+                                                </tr>
+                                                <tr style="background-color: #e8f5e9;">
+                                                    <td style="padding: 8px; border: 1px solid #dee2e6; font-weight: bold;">実際値</td>
+                                                    
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6;">
+                                                            <span class="item-field-match">
+                                                                員搬入工具費
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6;">
+                                                            <span class="item-field-match">
+                                                                -
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6; text-align: center;">
+                                                            <span class="item-field-match">
+                                                                1
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6; text-align: center;">
+                                                            <span class="item-field-match">
+                                                                式
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6; text-align: right;">
+                                                            <span class="item-field-match">
+                                                                52,000円
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6; text-align: right;">
+                                                            <span class="item-field-match">
+                                                                52,000円
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6;">
+                                                            <span class="item-field-match">
+                                                                -
+                                                            </span>
+                                                        </td>
+                                                        <td style="padding: 8px; border: 1px solid #dee2e6;">
+                                                            <span class="item-field-match">
+                                                                経費
+                                                            </span>
+                                                        </td>
+                                                    
+                                                </tr>
+                                                
+                                                
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    
+                                </td>
+                            
+                        </tr>
+                        
+                    </tbody>
+                </table>
+                
+                
+            </div>
+        </div>
+        
+        
+        <div class="timestamp">
+            レポート生成日時: 2025年07月06日 17:57:00
+        </div>
+    </div>
+</body>
+</html>

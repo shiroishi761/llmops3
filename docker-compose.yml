@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    volumes:
+      - .:/app
+      - /app/__pycache__
+      - /app/.pytest_cache
+    env_file:
+      - .env
+    ports:
+      - "8000:8000"
+    command: python -m uvicorn src.main:app --reload --host 0.0.0.0 --port 8000
+    
+  # CLIモードで実験を実行する場合
+  cli:
+    build: .
+    volumes:
+      - .:/app
+      - ./experiments:/app/experiments
+      - ./results:/app/results
+      - ./config:/app/config
+    env_file:
+      - .env
+    command: python -m src.cli
+    profiles:
+      - cli

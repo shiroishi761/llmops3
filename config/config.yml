@@ -1,0 +1,51 @@
+# フィールド重み設定
+field_weights:
+  # 金額関連フィールド
+  total_price: 3.0
+  tax_price: 3.0
+  sub_total: 3.0
+  
+  # 明細項目
+  items:
+    name: 3.0        # 品目名は最重要
+    quantity: 2.0
+    price: 2.0
+    sub_total: 2.0
+    unit: 1.0
+    spec: 1.0
+    note: 0.5
+    account_item: 1.0
+  
+  # 顧客ID
+  destination_customer_id: 2.0
+  issuer_customer_id: 2.0
+  
+  # 文書情報
+  doc_type: 1.5
+  doc_title: 1.5
+  doc_number: 1.5
+  doc_date: 1.5
+  doc_transaction: 1.5
+  
+  # 発行者情報
+  issuer: 1.0
+  issuer_address: 1.0
+  issuer_zip: 1.0
+  issuer_phone_number: 1.0
+  
+  # 宛先情報
+  destination: 1.0
+  
+  # 工事情報
+  construction_name: 1.0
+  construction_site: 1.0
+  construction_period: 1.0
+  
+  # その他
+  payment_terms: 1.0
+  expiration_date: 1.0
+  tax_type: 1.0
+  t_number: 1.0
+  
+  # デフォルト重み（上記に含まれないフィールド用）
+  default_weight: 1.0

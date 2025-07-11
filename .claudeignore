@@ -1,0 +1,27 @@
+# Claude ignore file
+# Add patterns for files/folders to exclude from Claude's context
+
+# Dependencies
+node_modules/
+vendor/
+venv/
+.env
+
+# Build outputs
+dist/
+build/
+*.pyc
+__pycache__/
+
+# IDE and system files
+.idea/
+.vscode/
+.DS_Store
+*.swp
+*.swo
+
+# Sensitive files
+*.pem
+*.key
+.env.*
+secrets/
