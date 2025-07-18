@@ -24,3 +24,23 @@ class NotFoundError(DomainException):
 class ConfigurationError(DomainException):
     """設定エラー"""
     pass
+
+
+class PromptNotFoundError(NotFoundError):
+    """プロンプトが見つからないエラー"""
+    pass
+
+
+class DatasetNotFoundError(NotFoundError):
+    """データセットが見つからないエラー"""
+    pass
+
+
+class ExtractionFailedError(ExternalServiceError):
+    """文書抽出に失敗したエラー"""
+    pass
+
+
+class AccuracyEvaluationError(DomainException):
+    """精度評価に失敗したエラー"""
+    pass

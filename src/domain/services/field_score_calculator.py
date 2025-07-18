@@ -189,13 +189,16 @@ class ItemsFieldCalculator(FieldScoreCalculator):
             is_correct = expected == actual
             details = None
         else:
-            # 複雑なマッチングを実行
+            # マッチングサービスでマッチングを実行し、精度を計算
             expected_items = expected if isinstance(expected, list) else []
             actual_items = actual if isinstance(actual, list) else []
             
-            accuracy, matches = self.items_matching_service.calculate_items_accuracy(
+            matches = self.items_matching_service.match_items(
                 expected_items, actual_items
             )
+            
+            # 精度を計算
+            accuracy = self._calculate_items_accuracy(matches)
             
             # 80%以上で正解とする
             is_correct = accuracy >= 0.8
@@ -206,7 +209,7 @@ class ItemsFieldCalculator(FieldScoreCalculator):
                         "expected": match.expected_item,
                         "matched": match.matched_item,
                         "score": match.match_score,
-                        "field_matches": match.field_matches
+                        "match_reason": match.match_reason
                     }
                     for match in matches
                 ]
@@ -251,6 +254,14 @@ class ItemsFieldCalculator(FieldScoreCalculator):
                 results.append(result)
         
         return results
+    
+    def _calculate_items_accuracy(self, matches: List) -> float:
+        """マッチング結果から全体精度を計算"""
+        if not matches:
+            return 0.0
+        
+        total_score = sum(match.match_score for match in matches)
+        return total_score / len(matches)
 
 
 class FieldScoreCalculatorFactory:
@@ -272,7 +283,17 @@ class FieldScoreCalculatorFactory:
             'sub_total': 'amount',
             'doc_date': 'date',
             'expiration_date': 'date',
-            'items': 'items'
+            'items': 'items',
+            
+            # items内フィールドのマッピング
+            'items.name': 'simple',
+            'items.quantity': 'amount',
+            'items.price': 'amount',
+            'items.sub_total': 'amount',
+            'items.unit': 'simple',
+            'items.spec': 'simple',
+            'items.note': 'simple',
+            'items.account_item': 'simple'
         }
     
     def get_calculator(self, field_name: str) -> FieldScoreCalculator:

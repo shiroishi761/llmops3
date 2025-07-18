@@ -1,14 +1,14 @@
-"""FieldResultのテスト"""
+"""FieldEvaluationResultのテスト"""
 import pytest
-from src.domain.models.field_result import FieldResult, FieldResultCollection
+from src.domain.models.field_result import FieldEvaluationResult, FieldEvaluationResultCollection
 
 
-class TestFieldResult:
-    """FieldResultのテスト"""
+class TestFieldEvaluationResult:
+    """FieldEvaluationResultのテスト"""
 
     def test_create_correct(self):
         """正解の結果作成"""
-        result = FieldResult.create_correct(
+        result = FieldEvaluationResult.create_correct(
             "total_price", 1000, 1000, 3.0
         )
         
@@ -22,7 +22,7 @@ class TestFieldResult:
 
     def test_create_incorrect(self):
         """不正解の結果作成"""
-        result = FieldResult.create_incorrect(
+        result = FieldEvaluationResult.create_incorrect(
             "tax_price", 1000, 2000, 3.0
         )
         
@@ -36,7 +36,7 @@ class TestFieldResult:
 
     def test_create_with_item_index(self):
         """アイテムインデックス付きの結果作成"""
-        result = FieldResult.create_correct(
+        result = FieldEvaluationResult.create_correct(
             "items.name", "商品A", "商品A", 3.0, item_index=0
         )
         
@@ -47,13 +47,13 @@ class TestFieldResult:
     def test_get_display_name(self):
         """表示名の取得"""
         # 通常のフィールド
-        result = FieldResult.create_correct(
+        result = FieldEvaluationResult.create_correct(
             "total_price", 1000, 1000, 3.0
         )
         assert result.get_display_name() == "total_price"
         
         # アイテムフィールド
-        result = FieldResult.create_correct(
+        result = FieldEvaluationResult.create_correct(
             "items.name", "商品A", "商品A", 3.0, item_index=0
         )
         assert result.get_display_name() == "items.name[0]"
@@ -61,7 +61,7 @@ class TestFieldResult:
     def test_validation_negative_weight(self):
         """負の重みでバリデーションエラー"""
         with pytest.raises(ValueError, match="重みは0以上である必要があります"):
-            FieldResult(
+            FieldEvaluationResult(
                 field_name="test",
                 expected_value="expected",
                 actual_value="actual",
@@ -73,7 +73,7 @@ class TestFieldResult:
     def test_validation_negative_score(self):
         """負のスコアでバリデーションエラー"""
         with pytest.raises(ValueError, match="スコアは0以上である必要があります"):
-            FieldResult(
+            FieldEvaluationResult(
                 field_name="test",
                 expected_value="expected",
                 actual_value="actual",
@@ -85,7 +85,7 @@ class TestFieldResult:
     def test_validation_correct_score_mismatch(self):
         """正解時のスコア不一致でバリデーションエラー"""
         with pytest.raises(ValueError, match="正解の場合、スコアは重みと同じである必要があります"):
-            FieldResult(
+            FieldEvaluationResult(
                 field_name="test",
                 expected_value="expected",
                 actual_value="actual",
@@ -97,7 +97,7 @@ class TestFieldResult:
     def test_validation_incorrect_score_mismatch(self):
         """不正解時のスコア不一致でバリデーションエラー"""
         with pytest.raises(ValueError, match="不正解の場合、スコアは0である必要があります"):
-            FieldResult(
+            FieldEvaluationResult(
                 field_name="test",
                 expected_value="expected",
                 actual_value="actual",
@@ -108,7 +108,7 @@ class TestFieldResult:
 
     def test_to_dict(self):
         """辞書変換"""
-        result = FieldResult.create_correct(
+        result = FieldEvaluationResult.create_correct(
             "total_price", 1000, 1000, 3.0
         )
         
@@ -124,19 +124,19 @@ class TestFieldResult:
         assert result_dict.get("field_score", result_dict.get("score")) == 3.0
 
 
-class TestFieldResultCollection:
-    """FieldResultCollectionのテスト"""
+class TestFieldEvaluationResultCollection:
+    """FieldEvaluationResultCollectionのテスト"""
 
     def test_calculate_overall_accuracy(self):
         """全体精度の計算"""
         results = [
-            FieldResult.create_correct("total_price", 1000, 1000, 3.0),
-            FieldResult.create_incorrect("tax_price", 1000, 2000, 3.0),
-            FieldResult.create_correct("items.name", "商品A", "商品A", 3.0, item_index=0),
-            FieldResult.create_correct("items.quantity", 2, 2, 2.0, item_index=0),
+            FieldEvaluationResult.create_correct("total_price", 1000, 1000, 3.0),
+            FieldEvaluationResult.create_incorrect("tax_price", 1000, 2000, 3.0),
+            FieldEvaluationResult.create_correct("items.name", "商品A", "商品A", 3.0, item_index=0),
+            FieldEvaluationResult.create_correct("items.quantity", 2, 2, 2.0, item_index=0),
         ]
         
-        collection = FieldResultCollection(results)
+        collection = FieldEvaluationResultCollection(results)
         analysis_service = collection.get_analysis_service()
         accuracy = analysis_service.calculate_overall_accuracy()
         
@@ -146,12 +146,12 @@ class TestFieldResultCollection:
     def test_get_by_field_name(self):
         """フィールド名による検索"""
         results = [
-            FieldResult.create_correct("total_price", 1000, 1000, 3.0),
-            FieldResult.create_correct("items.name", "商品A", "商品A", 3.0, item_index=0),
-            FieldResult.create_correct("items.name", "商品B", "商品B", 3.0, item_index=1),
+            FieldEvaluationResult.create_correct("total_price", 1000, 1000, 3.0),
+            FieldEvaluationResult.create_correct("items.name", "商品A", "商品A", 3.0, item_index=0),
+            FieldEvaluationResult.create_correct("items.name", "商品B", "商品B", 3.0, item_index=1),
         ]
         
-        collection = FieldResultCollection(results)
+        collection = FieldEvaluationResultCollection(results)
         analysis_service = collection.get_analysis_service()
         items_name_results = analysis_service.get_by_field_name("items.name")
         
@@ -162,13 +162,13 @@ class TestFieldResultCollection:
     def test_get_by_item_index(self):
         """アイテムインデックスによる検索"""
         results = [
-            FieldResult.create_correct("total_price", 1000, 1000, 3.0),
-            FieldResult.create_correct("items.name", "商品A", "商品A", 3.0, item_index=0),
-            FieldResult.create_correct("items.quantity", 2, 2, 2.0, item_index=0),
-            FieldResult.create_correct("items.name", "商品B", "商品B", 3.0, item_index=1),
+            FieldEvaluationResult.create_correct("total_price", 1000, 1000, 3.0),
+            FieldEvaluationResult.create_correct("items.name", "商品A", "商品A", 3.0, item_index=0),
+            FieldEvaluationResult.create_correct("items.quantity", 2, 2, 2.0, item_index=0),
+            FieldEvaluationResult.create_correct("items.name", "商品B", "商品B", 3.0, item_index=1),
         ]
         
-        collection = FieldResultCollection(results)
+        collection = FieldEvaluationResultCollection(results)
         analysis_service = collection.get_analysis_service()
         item_0_results = analysis_service.get_by_item_index(0)
         
@@ -178,14 +178,14 @@ class TestFieldResultCollection:
     def test_get_item_summary(self):
         """アイテム別サマリー"""
         results = [
-            FieldResult.create_correct("total_price", 1000, 1000, 3.0),
-            FieldResult.create_correct("items.name", "商品A", "商品A", 3.0, item_index=0),
-            FieldResult.create_correct("items.quantity", 2, 2, 2.0, item_index=0),
-            FieldResult.create_correct("items.name", "商品B", "商品B", 3.0, item_index=1),
-            FieldResult.create_incorrect("items.quantity", 1, 2, 2.0, item_index=1),
+            FieldEvaluationResult.create_correct("total_price", 1000, 1000, 3.0),
+            FieldEvaluationResult.create_correct("items.name", "商品A", "商品A", 3.0, item_index=0),
+            FieldEvaluationResult.create_correct("items.quantity", 2, 2, 2.0, item_index=0),
+            FieldEvaluationResult.create_correct("items.name", "商品B", "商品B", 3.0, item_index=1),
+            FieldEvaluationResult.create_incorrect("items.quantity", 1, 2, 2.0, item_index=1),
         ]
         
-        collection = FieldResultCollection(results)
+        collection = FieldEvaluationResultCollection(results)
         analysis_service = collection.get_analysis_service()
         summary = analysis_service.get_item_summary()
         
@@ -205,12 +205,12 @@ class TestFieldResultCollection:
     def test_get_items_results(self):
         """アイテム関連の結果のみ取得"""
         results = [
-            FieldResult.create_correct("total_price", 1000, 1000, 3.0),
-            FieldResult.create_correct("items.name", "商品A", "商品A", 3.0, item_index=0),
-            FieldResult.create_correct("items.quantity", 2, 2, 2.0, item_index=0),
+            FieldEvaluationResult.create_correct("total_price", 1000, 1000, 3.0),
+            FieldEvaluationResult.create_correct("items.name", "商品A", "商品A", 3.0, item_index=0),
+            FieldEvaluationResult.create_correct("items.quantity", 2, 2, 2.0, item_index=0),
         ]
         
-        collection = FieldResultCollection(results)
+        collection = FieldEvaluationResultCollection(results)
         analysis_service = collection.get_analysis_service()
         items_results = analysis_service.get_items_results()
         
@@ -220,12 +220,12 @@ class TestFieldResultCollection:
     def test_get_non_items_results(self):
         """アイテム以外の結果のみ取得"""
         results = [
-            FieldResult.create_correct("total_price", 1000, 1000, 3.0),
-            FieldResult.create_correct("items.name", "商品A", "商品A", 3.0, item_index=0),
-            FieldResult.create_correct("items.quantity", 2, 2, 2.0, item_index=0),
+            FieldEvaluationResult.create_correct("total_price", 1000, 1000, 3.0),
+            FieldEvaluationResult.create_correct("items.name", "商品A", "商品A", 3.0, item_index=0),
+            FieldEvaluationResult.create_correct("items.quantity", 2, 2, 2.0, item_index=0),
         ]
         
-        collection = FieldResultCollection(results)
+        collection = FieldEvaluationResultCollection(results)
         analysis_service = collection.get_analysis_service()
         non_items_results = analysis_service.get_non_items_results()
         

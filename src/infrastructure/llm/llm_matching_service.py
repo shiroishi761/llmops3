@@ -13,10 +13,10 @@ logger = logging.getLogger(__name__)
 class LLMMatchingService:
     """LLMを使用して明細項目の高度なマッチングを行うサービス"""
     
-    def __init__(self, gemini_service):
-        self.gemini_service = gemini_service
+    def __init__(self, external_llm_service):
+        self.external_llm_service = external_llm_service
         
-    def match_items(
+    async def match_items(
         self,
         expected_items: List[Dict[str, Any]],
         actual_items: List[Dict[str, Any]]
@@ -35,8 +35,20 @@ class LLMMatchingService:
         prompt = self._create_matching_prompt(expected_items, actual_items)
         
         try:
-            # Geminiに問い合わせ
-            response = self.gemini_service.extract(prompt)
+            # GeminiServiceを直接使用してマッチング実行
+            from ...infrastructure.external_services.gemini_service import GeminiService
+            from ...infrastructure.config.configuration_service import ConfigurationService
+            
+            config_service = ConfigurationService()
+            gemini_service = GeminiService(config_service)
+            
+            # Geminiで直接プロンプトを実行
+            response = gemini_service.extract(
+                prompt,
+                model_name="gemini-1.5-flash",
+                temperature=0.1,
+                max_tokens=8192
+            )
             
             # レスポンスからマッチング結果を抽出
             matches = self._parse_matching_response(response, len(expected_items))

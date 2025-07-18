@@ -2,8 +2,8 @@
 import pytest
 from datetime import datetime
 from src.domain.models.experiment import Experiment, ExperimentStatus
-from src.domain.models.extraction_result import ExtractionResult
-from src.domain.models.field_result import FieldResult
+from src.domain.models.extraction_result import DocumentEvaluationResult
+from src.domain.models.field_result import FieldEvaluationResult
 
 
 class TestExperiment:
@@ -27,12 +27,12 @@ class TestExperiment:
         """抽出結果の追加テスト"""
         experiment = Experiment(id="exp-001", name="テスト実験")
         
-        result = ExtractionResult(
+        result = DocumentEvaluationResult(
             document_id="doc-001",
             expected_data={"total_price": "1000"},
             extracted_data={"total_price": "1000"},
-            accuracy_metrics=[
-                AccuracyMetric("total_price", "1000", "1000", 3.0)
+            field_results=[
+                FieldEvaluationResult.create_correct("total_price", "1000", "1000", 3.0)
             ]
         )
         
@@ -72,24 +72,24 @@ class TestExperiment:
         experiment = Experiment(id="exp-001", name="テスト")
         
         # 100%正解のケース
-        result1 = ExtractionResult(
+        result1 = DocumentEvaluationResult(
             document_id="doc-001",
             expected_data={"total_price": "1000", "customer_id": "C001"},
             extracted_data={"total_price": "1000", "customer_id": "C001"},
-            accuracy_metrics=[
-                AccuracyMetric("total_price", "1000", "1000", 3.0),
-                AccuracyMetric("customer_id", "C001", "C001", 2.0)
+            field_results=[
+                FieldEvaluationResult.create_correct("total_price", "1000", "1000", 3.0),
+                FieldEvaluationResult.create_correct("customer_id", "C001", "C001", 2.0)
             ]
         )
         
         # 部分的に正解のケース
-        result2 = ExtractionResult(
+        result2 = DocumentEvaluationResult(
             document_id="doc-002",
             expected_data={"total_price": "2000", "customer_id": "C002"},
             extracted_data={"total_price": "2000", "customer_id": "C003"},
-            accuracy_metrics=[
-                AccuracyMetric("total_price", "2000", "2000", 3.0),
-                AccuracyMetric("customer_id", "C002", "C003", 2.0)
+            field_results=[
+                FieldEvaluationResult.create_correct("total_price", "2000", "2000", 3.0),
+                FieldEvaluationResult.create_incorrect("customer_id", "C002", "C003", 2.0)
             ]
         )
         
@@ -109,13 +109,13 @@ class TestExperiment:
         
         # 3つの結果を追加
         results = [
-            ExtractionResult(
+            DocumentEvaluationResult(
                 document_id=f"doc-{i}",
                 expected_data={"total_price": "1000", "customer_id": "C001"},
                 extracted_data={"total_price": "1000", "customer_id": "C001" if i < 2 else "C002"},
-                accuracy_metrics=[
-                    AccuracyMetric("total_price", "1000", "1000", 3.0),
-                    AccuracyMetric("customer_id", "C001", "C001" if i < 2 else "C002", 2.0)
+                field_results=[
+                    FieldEvaluationResult.create_correct("total_price", "1000", "1000", 3.0),
+                    FieldEvaluationResult.create_correct("customer_id", "C001", "C001", 2.0) if i < 2 else FieldEvaluationResult.create_incorrect("customer_id", "C001", "C002", 2.0)
                 ]
             )
             for i in range(3)
@@ -138,14 +138,14 @@ class TestExperiment:
         experiment.mark_as_running()
         
         # 成功と失敗の結果を追加
-        success_result = ExtractionResult(
+        success_result = DocumentEvaluationResult(
             document_id="doc-001",
             expected_data={"total_price": "1000"},
             extracted_data={"total_price": "1000"},
-            accuracy_metrics=[AccuracyMetric("total_price", "1000", "1000", 3.0)]
+            field_results=[FieldEvaluationResult.create_correct("total_price", "1000", "1000", 3.0)]
         )
         
-        failed_result = ExtractionResult(
+        failed_result = DocumentEvaluationResult(
             document_id="doc-002",
             expected_data={"total_price": "2000"},
             extracted_data={},

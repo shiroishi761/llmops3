@@ -1,12 +1,15 @@
 """設定管理サービス"""
 import os
 from pathlib import Path
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, Tuple
 import yaml
 from dotenv import load_dotenv
 
+from src.domain.services.config_provider import ConfigProvider
+from src.domain.exceptions import ConfigurationError
 
-class ConfigurationService:
+
+class ConfigurationService(ConfigProvider):
     """設定を管理するサービス"""
     
     def __init__(self, config_path: Optional[str] = None):
@@ -28,6 +31,9 @@ class ConfigurationService:
         # 設定を読み込み
         self.config = self._load_config()
         
+        # フィールド重みを初期化時に解析
+        self._field_weights, self._default_weight = self._parse_field_weights()
+        
     def _load_config(self) -> Dict[str, Any]:
         """設定ファイルを読み込み"""
         config = {}
@@ -39,24 +45,35 @@ class ConfigurationService:
                 
         return config
     
-    def get_field_weight(self, field_name: str) -> float:
+    def _parse_field_weights(self) -> Tuple[Dict[str, float], float]:
         """
-        フィールドの重みを取得
+        フィールド重みを解析し、統一形式で返す
         
-        Args:
-            field_name: フィールド名
-            
         Returns:
-            フィールドの重み
+            (全フィールド重み辞書, デフォルト重み)
         """
-        field_weights = self.config.get("field_weights", {})
+        field_weights_config = self.config.get("field_weights", {})
         
-        # 直接フィールド名で取得
-        if field_name in field_weights:
-            return float(field_weights[field_name])
+        # デフォルト重みを取得
+        default_weight = float(field_weights_config.get("default_weight", 1.0))
         
-        # デフォルト重み
-        return float(field_weights.get("default_weight", 1.0))
+        # 全フィールド重み辞書
+        all_weights = {}
+        
+        for field_name, weight in field_weights_config.items():
+            if field_name == "default_weight":
+                continue
+            elif field_name == "items" and isinstance(weight, dict):
+                # itemsが辞書の場合、各サブフィールドを展開
+                for sub_field, sub_weight in weight.items():
+                    full_field_name = f"items.{sub_field}"
+                    all_weights[full_field_name] = float(sub_weight)
+            else:
+                # 通常のフィールドまたはitems.プレフィックス付きフィールド
+                all_weights[field_name] = float(weight)
+        
+        return all_weights, default_weight
+    
     
     def get_field_weights_dict(self) -> Dict[str, float]:
         """
@@ -65,68 +82,13 @@ class ConfigurationService:
         Returns:
             フィールド名と重みの辞書
         """
-        field_weights = self.config.get("field_weights", {})
-        weights_dict = {}
-        
-        # すべてのフィールドを処理
-        for field_name, weight in field_weights.items():
-            if field_name == "items" and isinstance(weight, dict):
-                # itemsが辞書の場合、各サブフィールドを展開
-                for sub_field, sub_weight in weight.items():
-                    weights_dict[f"items.{sub_field}"] = float(sub_weight)
-            elif field_name != "default_weight":
-                weights_dict[field_name] = float(weight)
-                    
-        return weights_dict
+        return self._field_weights.copy()  # 防御的コピー
     
     def get_default_weight(self) -> float:
         """デフォルトの重みを取得"""
-        field_weights = self.config.get("field_weights", {})
-        return float(field_weights.get("default_weight", 1.0))
+        return self._default_weight
     
-    def get_items_field_weights(self) -> Dict[str, float]:
-        """
-        items内のフィールド重みを辞書形式で取得
-        
-        Returns:
-            フィールド名と重みの辞書（items.プレフィックスなし）
-        """
-        field_weights = self.config.get("field_weights", {})
-        items_weights = {}
-        
-        # itemsフィールドが辞書の場合、その内容を取得
-        if "items" in field_weights and isinstance(field_weights["items"], dict):
-            for field_name, weight in field_weights["items"].items():
-                items_weights[field_name] = float(weight)
-        else:
-            # 後方互換性のため、items.で始まるフィールドも探す
-            for field_name, weight in field_weights.items():
-                if field_name.startswith("items.") and field_name != "items.default_weight":
-                    # items.プレフィックスを除去
-                    items_field_name = field_name[6:]  # "items."の長さは6
-                    items_weights[items_field_name] = float(weight)
-                    
-        return items_weights
     
-    def get_items_field_weight(self, field_name: str) -> float:
-        """
-        items内の特定フィールドの重みを取得
-        
-        Args:
-            field_name: フィールド名（items.プレフィックスなし）
-            
-        Returns:
-            フィールドの重み
-        """
-        field_weights = self.config.get("field_weights", {})
-        
-        # items.プレフィックスを付けて検索
-        items_field_key = f"items.{field_name}"
-        if items_field_key in field_weights:
-            return float(field_weights[items_field_key])
-        
-        # デフォルト重み
-        return float(field_weights.get("default_weight", 1.0))
     
     @property
     def gemini_api_key(self) -> str:

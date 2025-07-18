@@ -55,10 +55,10 @@ class TestDockerExperimentIntegration:
             assert "request failed" in str(exc_info.value)
     
     def test_field_result_compatibility(self):
-        """FieldResultの互換性テスト"""
-        from src.domain.models.field_result import FieldResult
+        """FieldEvaluationResultの互換性テスト"""
+        from src.domain.models.field_result import FieldEvaluationResult
         
-        result = FieldResult.create_incorrect(
+        result = FieldEvaluationResult.create_incorrect(
             field_name="test_field",
             expected="expected",
             actual="actual", 
@@ -138,11 +138,11 @@ class TestDockerExperimentIntegration:
             run_experiment("test_config.yml", "test_experiment")
     
     def test_field_result_score_migration(self):
-        """FieldResultスコアへの移行テスト"""
-        # 新しいシステムでFieldResultが使われることを確認
-        from src.domain.models.field_result import FieldResult
+        """FieldEvaluationResultスコアへの移行テスト"""
+        # 新しいシステムでFieldEvaluationResultが使われることを確認
+        from src.domain.models.field_result import FieldEvaluationResult
         
-        result = FieldResult.create_correct(
+        result = FieldEvaluationResult.create_correct(
             field_name="test",
             expected="expected",
             actual="expected",  # 正解
@@ -154,7 +154,7 @@ class TestDockerExperimentIntegration:
         assert result.is_correct == True
         
         # 不正解の場合
-        result_wrong = FieldResult.create_incorrect(
+        result_wrong = FieldEvaluationResult.create_incorrect(
             field_name="test",
             expected="expected",
             actual="actual",  # 不正解

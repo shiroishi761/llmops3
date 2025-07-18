@@ -2,24 +2,28 @@
 import uuid
 import yaml
 import time
+import logging
 from pathlib import Path
 from typing import Dict, Any, List, Optional
 
-from ..dto.experiment_dto import (
+from src.application.dto.experiment_dto import (
     ExperimentConfigDto,
     ExperimentResultDto,
     ExperimentSummaryDto,
     ErrorDto
 )
-from ...domain.models.experiment import Experiment, ExperimentStatus
-from ...domain.models.extraction_result import DocumentEvaluationResult
-from ...domain.services.accuracy_evaluation_service import AccuracyEvaluationService
-from ...infrastructure.config.configuration_service import ConfigurationService
-from ...infrastructure.external_services.langfuse_service import LangfuseService
-from ...infrastructure.external_services.gemini_service import GeminiService
-from ...infrastructure.external_services.llm_client import LLMClient
-from ...infrastructure.repositories.file_experiment_repository import FileExperimentRepository
-from ...infrastructure.llm.llm_matching_service import LLMMatchingService
+from src.application.dto.field_evaluation_dto import (
+    FieldEvaluationResultDto,
+    DocumentEvaluationResultDto
+)
+from src.domain.models.experiment import Experiment, ExperimentStatus
+from src.domain.services.accuracy_evaluator import AccuracyEvaluator
+from src.domain.services.external_llm_service import ExternalLLMService
+from src.domain.services.config_provider import ConfigProvider
+from src.domain.repositories.experiment_repository import ExperimentRepository
+
+
+logger = logging.getLogger(__name__)
 
 
 class RunExperimentUseCase:
@@ -27,36 +31,26 @@ class RunExperimentUseCase:
     
     def __init__(
         self,
-        config_service: Optional[ConfigurationService] = None,
-        langfuse_service: Optional[LangfuseService] = None,
-        gemini_service: Optional[GeminiService] = None,
-        experiment_repository: Optional[FileExperimentRepository] = None,
-        accuracy_service: Optional[AccuracyEvaluationService] = None,
-        llm_client: Optional[LLMClient] = None
+        experiment_repository: ExperimentRepository,
+        external_llm_service: ExternalLLMService,
+        accuracy_evaluator: AccuracyEvaluator,
+        config_provider: ConfigProvider
     ):
         """
         初期化
         
         Args:
-            config_service: 設定サービス
-            langfuse_service: Langfuseサービス
-            gemini_service: Geminiサービス
             experiment_repository: 実験リポジトリ
-            accuracy_service: 精度評価サービス
-            llm_client: LLMクライアント
+            external_llm_service: 外部LLMサービス
+            accuracy_evaluator: 精度評価サービス
+            config_provider: 設定プロバイダー
         """
-        self.config_service = config_service or ConfigurationService()
-        self.langfuse_service = langfuse_service or LangfuseService(self.config_service)
-        self.gemini_service = gemini_service or GeminiService(self.config_service)
-        self.experiment_repository = experiment_repository or FileExperimentRepository()
-        self.llm_client = llm_client or LLMClient()
+        self.experiment_repository = experiment_repository
+        self.external_llm_service = external_llm_service
+        self.accuracy_evaluator = accuracy_evaluator
+        self.config_provider = config_provider
         
-        # 精度評価サービス
-        self.accuracy_service = accuracy_service or AccuracyEvaluationService(
-            self.config_service
-        )
-        
-    def execute(self, experiment_config_path: str, experiment_name: Optional[str] = None) -> ExperimentResultDto:
+    async def execute_from_config_path(self, experiment_config_path: str, experiment_name: Optional[str] = None) -> ExperimentResultDto:
         """
         実験設定ファイルから実験を実行
         
@@ -79,10 +73,9 @@ class RunExperimentUseCase:
             description=config.get("description")
         )
         
-        # 実験を実行
-        return self.execute_from_config(config_dto)
+        return await self.execute_from_config(config_dto)
     
-    def execute_from_config(self, config: ExperimentConfigDto) -> ExperimentResultDto:
+    async def execute_from_config(self, config: ExperimentConfigDto) -> ExperimentResultDto:
         """
         設定DTOから実験を実行
         
@@ -92,7 +85,6 @@ class RunExperimentUseCase:
         Returns:
             実験結果DTO
         """
-        # 実験エンティティを作成
         experiment = Experiment(
             id=str(uuid.uuid4()),
             name=config.experiment_name,
@@ -102,33 +94,27 @@ class RunExperimentUseCase:
             description=config.description
         )
         
-        # 実験を開始
         experiment.mark_as_running()
-        print(f"実験を開始します: {config.experiment_name}")
+        logger.info(f"実験を開始します: {config.experiment_name}")
         
         errors: List[ErrorDto] = []
         
         try:
-            # プロンプトを取得
-            print(f"プロンプトを取得中: {config.prompt_name}")
-            prompt_template = self.langfuse_service.get_prompt(config.prompt_name)
+            logger.info(f"プロンプトを取得中: {config.prompt_name}")
+            prompt_template = await self.external_llm_service.get_prompt(config.prompt_name)
             
-            # データセットを取得
-            print(f"データセットを取得中: {config.dataset_name}")
-            dataset_items = self.langfuse_service.get_dataset(config.dataset_name)
-            print(f"データセット内のアイテム数: {len(dataset_items)}")
+            logger.info(f"データセットを取得中: {config.dataset_name}")
+            dataset_items = await self.external_llm_service.get_dataset(config.dataset_name)
+            logger.info(f"データセット内のアイテム数: {len(dataset_items)}")
             
-            # フィールド重みを取得
-            field_weights = self.config_service.get_field_weights_dict()
-            default_weight = self.config_service.get_default_weight()
+            field_weights = self.config_provider.get_field_weights_dict()
+            default_weight = self.config_provider.get_default_weight()
             
-            # 各ドキュメントを処理
             for i, item in enumerate(dataset_items):
-                print(f"処理中 ({i+1}/{len(dataset_items)}): {item['id']}")
+                logger.info(f"処理中 ({i+1}/{len(dataset_items)}): {item['id']}")
                 
                 try:
-                    # ドキュメント処理
-                    result = self._process_document(
+                    result_dto = await self._process_document(
                         item,
                         prompt_template,
                         config.prompt_name,
@@ -136,45 +122,41 @@ class RunExperimentUseCase:
                         field_weights,
                         default_weight
                     )
-                    experiment.add_result(result)
                     
-                    if result.is_success():
-                        print(f"  ✓ 成功 (精度: {result.calculate_accuracy():.2%})")
+                    experiment.add_result_from_dto(result_dto)
+                    
+                    if result_dto.is_successful:
+                        logger.info(f"  ✓ 成功 (精度: {result_dto.overall_accuracy:.2%})")
                     else:
-                        print(f"  ✗ 失敗: {result.error}")
+                        logger.warning(f"  ✗ 失敗: {result_dto.error_message}")
                         errors.append(ErrorDto(
                             document_id=item['id'],
-                            error_message=result.error or "Unknown error",
+                            error_message=result_dto.error_message or "Unknown error",
                             error_type="extraction_error"
                         ))
                         
                 except Exception as e:
-                    print(f"  ✗ エラー: {str(e)}")
+                    logger.error(f"  ✗ エラー: {str(e)}")
                     errors.append(ErrorDto(
                         document_id=item['id'],
                         error_message=str(e),
                         error_type="processing_error"
                     ))
             
-            # 実験を完了
             experiment.mark_as_completed()
-            print("実験が完了しました")
+            logger.info("実験が完了しました")
             
         except Exception as e:
-            # 実験を失敗として記録
             experiment.mark_as_failed(str(e))
-            print(f"実験が失敗しました: {str(e)}")
+            logger.error(f"実験が失敗しました: {str(e)}")
             raise
             
         finally:
-            # Langfuseのバッファをフラッシュ
-            self.langfuse_service.flush()
+            await self.external_llm_service.flush()
             
-        # 結果を保存
         result_path = self.experiment_repository.save(experiment)
-        print(f"結果を保存しました: {result_path}")
+        logger.info(f"結果を保存しました: {result_path}")
         
-        # 結果DTOを作成
         summary = experiment.get_summary()
         return ExperimentResultDto(
             experiment_id=experiment.id,
@@ -193,7 +175,6 @@ class RunExperimentUseCase:
         )
     
     def _load_experiment_config(self, config_path: str, experiment_name: Optional[str] = None) -> Dict[str, Any]:
-        """実験設定ファイルを読み込み"""
         path = Path(config_path)
         if not path.exists():
             raise FileNotFoundError(f"実験設定ファイルが見つかりません: {config_path}")
@@ -201,25 +182,20 @@ class RunExperimentUseCase:
         with open(path, "r", encoding="utf-8") as f:
             config = yaml.safe_load(f)
             
-        # experiment_nameが指定されている場合は、その実験を探す
         if experiment_name:
             if "experiments" in config:
-                # 複数実験形式
                 for exp in config["experiments"]:
                     if exp.get("experiment_name") == experiment_name:
                         return exp
                 raise ValueError(f"実験名が見つかりません: {experiment_name}")
             elif config.get("experiment_name") == experiment_name:
-                # 単一実験形式（後方互換性のため）
                 return config
             else:
                 raise ValueError(f"実験名が見つかりません: {experiment_name}")
         else:
-            # experiment_nameが指定されていない場合は従来の形式を想定
             if "experiments" in config:
                 raise ValueError("実験名を指定してください (--name オプション)")
             
-        # 必須フィールドを検証
         required_fields = ["experiment_name", "prompt_name", "dataset_name", "llm_endpoint"]
         for field in required_fields:
             if field not in config:
@@ -227,7 +203,7 @@ class RunExperimentUseCase:
                 
         return config
     
-    def _process_document(
+    async def _process_document(
         self,
         item: Dict[str, Any],
         prompt_template: str,
@@ -235,15 +211,12 @@ class RunExperimentUseCase:
         llm_endpoint: str,
         field_weights: Dict[str, float],
         default_weight: float
-    ) -> DocumentEvaluationResult:
-        """単一のドキュメントを処理"""
+    ) -> DocumentEvaluationResultDto:
         document_id = item["id"]
         input_data = item["input"]
         expected_data = item["expected_output"]
         
         try:
-            # プロンプトに変数を埋め込み
-            # input_dataの各キーを対応する変数に置換
             prompt = prompt_template
             for key, value in input_data.items():
                 placeholder = f"{{{key}}}"
@@ -253,40 +226,43 @@ class RunExperimentUseCase:
                     # 画像データなど、文字列でない場合はそのまま使用
                     prompt = prompt.replace(placeholder, str(value))
             
-            # LLMエンドポイント経由で抽出
-            start_time = time.time()
-            extraction_response = self.llm_client.extract(
+            extraction_response = await self.external_llm_service.extract_document(
                 llm_endpoint=llm_endpoint,
                 prompt_name=prompt_name,
                 input_data=input_data
             )
-            extraction_time_ms = extraction_response.get("extraction_time_ms", int((time.time() - start_time) * 1000))
-            
+            extraction_time_ms = extraction_response.get("extraction_time_ms")
             extracted_data = extraction_response.get("extracted_data", {})
             
-            # 精度を評価
-            field_results = self.accuracy_service.evaluate_extraction(
+            field_results_dto = await self.accuracy_evaluator.evaluate_extraction(
                 expected_data,
                 extracted_data,
                 field_weights,
                 default_weight
             )
             
-            # 結果を作成
-            return DocumentEvaluationResult(
+            total_score = sum(result.score for result in field_results_dto)
+            max_possible_score = sum(result.weight for result in field_results_dto)
+            overall_accuracy = total_score / max_possible_score if max_possible_score > 0 else 0.0
+            
+            return DocumentEvaluationResultDto(
                 document_id=document_id,
-                expected_data=expected_data,
-                extracted_data=extracted_data,
-                field_results=field_results,
-                extraction_time_ms=extraction_time_ms
+                is_successful=True,
+                overall_accuracy=overall_accuracy,
+                total_score=total_score,
+                max_possible_score=max_possible_score,
+                field_results=field_results_dto,
+                execution_time_ms=extraction_time_ms
             )
             
         except Exception as e:
-            # エラー時の結果
-            return DocumentEvaluationResult(
+            return DocumentEvaluationResultDto(
                 document_id=document_id,
-                expected_data=expected_data,
-                extracted_data={},
+                is_successful=False,
+                overall_accuracy=0.0,
+                total_score=0.0,
+                max_possible_score=0.0,
                 field_results=[],
-                error=str(e)
+                error_message=str(e)
             )
+    

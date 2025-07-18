@@ -5,8 +5,8 @@ from datetime import datetime
 from typing import Optional
 
 from ...domain.models.experiment import Experiment, ExperimentStatus
-from ...domain.models.extraction_result import ExtractionResult
-from ...domain.models.field_result import FieldResult
+from ...domain.models.extraction_result import DocumentEvaluationResult
+from ...domain.models.field_result import FieldEvaluationResult
 from ...domain.repositories.experiment_repository import ExperimentRepository
 
 
@@ -79,7 +79,7 @@ class FileExperimentRepository(ExperimentRepository):
             "completed_at": experiment.completed_at.isoformat() if experiment.completed_at else None
         }
     
-    def _result_to_dict(self, result: ExtractionResult) -> dict:
+    def _result_to_dict(self, result: DocumentEvaluationResult) -> dict:
         """抽出結果オブジェクトを辞書に変換"""
         return {
             "document_id": result.document_id,
@@ -96,7 +96,7 @@ class FileExperimentRepository(ExperimentRepository):
             "created_at": result.created_at.isoformat()
         }
     
-    def _field_result_to_dict(self, field_result: FieldResult) -> dict:
+    def _field_result_to_dict(self, field_result: FieldEvaluationResult) -> dict:
         """フィールド結果オブジェクトを辞書に変換"""
         return {
             "field_name": field_result.field_name,

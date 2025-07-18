@@ -8,7 +8,7 @@ from src.domain.services.field_score_calculator import (
     ItemsFieldCalculator,
     FieldScoreCalculatorFactory
 )
-from src.domain.models.field_result import FieldResult
+from src.domain.models.field_result import FieldEvaluationResult
 
 
 class TestSimpleFieldCalculator:
@@ -215,3 +215,31 @@ class TestFieldScoreCalculatorFactory:
         """無効なマッピングの追加"""
         with pytest.raises(ValueError, match="Unknown calculator type"):
             self.factory.add_field_mapping("custom_field", "invalid_type")
+    
+    def test_get_items_field_calculators(self):
+        """items内フィールドのCalculator取得"""
+        # 金額系フィールドはAmountFieldCalculatorを返す
+        price_calculator = self.factory.get_calculator("items.price")
+        assert isinstance(price_calculator, AmountFieldCalculator)
+        
+        sub_total_calculator = self.factory.get_calculator("items.sub_total")
+        assert isinstance(sub_total_calculator, AmountFieldCalculator)
+        
+        quantity_calculator = self.factory.get_calculator("items.quantity")
+        assert isinstance(quantity_calculator, AmountFieldCalculator)
+        
+        # 文字列系フィールドはSimpleFieldCalculatorを返す
+        name_calculator = self.factory.get_calculator("items.name")
+        assert isinstance(name_calculator, SimpleFieldCalculator)
+        
+        unit_calculator = self.factory.get_calculator("items.unit")
+        assert isinstance(unit_calculator, SimpleFieldCalculator)
+        
+        spec_calculator = self.factory.get_calculator("items.spec")
+        assert isinstance(spec_calculator, SimpleFieldCalculator)
+        
+        note_calculator = self.factory.get_calculator("items.note")
+        assert isinstance(note_calculator, SimpleFieldCalculator)
+        
+        account_item_calculator = self.factory.get_calculator("items.account_item")
+        assert isinstance(account_item_calculator, SimpleFieldCalculator)

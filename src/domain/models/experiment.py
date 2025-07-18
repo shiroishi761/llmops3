@@ -5,7 +5,8 @@ from datetime import datetime
 from enum import Enum
 
 from .extraction_result import DocumentEvaluationResult
-
+from ...application.dto.field_evaluation_dto import DocumentEvaluationResultDto
+from .field_result import FieldEvaluationResult
 
 class ExperimentStatus(Enum):
     """実験のステータス"""
@@ -48,6 +49,35 @@ class Experiment:
     def add_result(self, result: DocumentEvaluationResult) -> None:
         """抽出結果を追加"""
         self.results.append(result)
+        
+    def add_result_from_dto(self, result_dto: DocumentEvaluationResultDto) -> None:
+        """DTOから抽出結果を追加"""
+        # フィールド結果DTOをドメインオブジェクトに変換
+        field_results = []
+        for field_dto in result_dto.field_results:
+            field_result = FieldEvaluationResult(
+                field_name=field_dto.field_name,
+                expected_value=field_dto.expected_value,
+                actual_value=field_dto.actual_value,
+                weight=field_dto.weight,
+                score=field_dto.score,
+                is_correct=field_dto.is_correct,
+                item_index=field_dto.item_index,
+                details=field_dto.details
+            )
+            field_results.append(field_result)
+        
+        # DocumentEvaluationResultを作成
+        domain_result = DocumentEvaluationResult(
+            document_id=result_dto.document_id,
+            expected_data={},  
+            extracted_data={}, 
+            field_results=field_results,
+            extraction_time_ms=result_dto.execution_time_ms,
+            error=result_dto.error_message if not result_dto.is_successful else None
+        )
+        
+        self.results.append(domain_result)
         
     def mark_as_running(self) -> None:
         """実験を実行中に変更"""

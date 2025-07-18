@@ -19,3 +19,4 @@ experiments:
     dataset_name: "fire_equipment_invoice_dataset"
     llm_endpoint: "llm/gemini/2.5-flash-thinking"
     description: "Gemini 2.5 Flash Thinking (最新)を使用した高度な推論モード抽出テスト"
+
