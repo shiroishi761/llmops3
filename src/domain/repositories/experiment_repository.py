@@ -3,19 +3,19 @@ from abc import ABC, abstractmethod
 from typing import Optional
 from pathlib import Path
 
-from ..models.experiment import Experiment
+from ...application.dto.experiment_dto import ExperimentDto
 
 
 class ExperimentRepository(ABC):
     """実験リポジトリのインターフェース"""
     
     @abstractmethod
-    def save(self, experiment: Experiment) -> Path:
+    def save(self, experiment_dto: ExperimentDto) -> Path:
         """
         実験を保存
         
         Args:
-            experiment: 保存する実験
+            experiment_dto: 保存する実験DTO
             
         Returns:
             保存先のパス
@@ -23,7 +23,7 @@ class ExperimentRepository(ABC):
         pass
     
     @abstractmethod
-    def load(self, experiment_id: str) -> Optional[Experiment]:
+    def load(self, experiment_id: str) -> Optional[ExperimentDto]:
         """
         実験を読み込み
         
@@ -31,6 +31,6 @@ class ExperimentRepository(ABC):
             experiment_id: 実験ID
             
         Returns:
-            実験インスタンス（見つからない場合はNone）
+            実験DTO（見つからない場合はNone）
         """
         pass

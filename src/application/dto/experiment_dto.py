@@ -1,6 +1,7 @@
 """実験関連のDTO"""
 from dataclasses import dataclass
 from typing import Optional, Dict, Any, List
+from datetime import datetime
 
 
 @dataclass
@@ -41,3 +42,20 @@ class ErrorDto:
     document_id: str
     error_message: str
     error_type: str
+
+
+@dataclass
+class ExperimentDto:
+    """実験エンティティの保存用DTO"""
+    id: str
+    name: str
+    prompt_name: str
+    dataset_name: str
+    llm_endpoint: str
+    description: Optional[str]
+    status: str
+    results: List[Dict[str, Any]]  # DocumentEvaluationResultのデータ
+    created_at: datetime
+    started_at: Optional[datetime] = None
+    completed_at: Optional[datetime] = None
+    error_message: Optional[str] = None

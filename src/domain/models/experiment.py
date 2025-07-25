@@ -4,8 +4,6 @@ from typing import List, Optional, Dict, Any
 from datetime import datetime
 from enum import Enum
 
-from .extraction_result import DocumentEvaluationResult
-
 
 class ExperimentStatus(Enum):
     """実験のステータス"""
@@ -13,7 +11,6 @@ class ExperimentStatus(Enum):
     RUNNING = "running"
     COMPLETED = "completed"
     FAILED = "failed"
-
 
 @dataclass
 class Experiment:
@@ -40,12 +37,12 @@ class Experiment:
     llm_endpoint: str = ""
     description: Optional[str] = None
     status: ExperimentStatus = ExperimentStatus.PENDING
-    results: List[DocumentEvaluationResult] = field(default_factory=list)
+    results: List = field(default_factory=list)  # DocumentEvaluationDto のリスト
     metadata: Dict[str, Any] = field(default_factory=dict)
     created_at: datetime = field(default_factory=datetime.now)
     completed_at: Optional[datetime] = None
     
-    def add_result(self, result: DocumentEvaluationResult) -> None:
+    def add_result(self, result) -> None:  # DocumentEvaluationDto
         """抽出結果を追加"""
         self.results.append(result)
         
@@ -69,27 +66,39 @@ class Experiment:
         if not self.results:
             return 0.0
             
-        successful_results = [r for r in self.results if r.is_success()]
+        successful_results = [r for r in self.results if not r.error]
         if not successful_results:
             return 0.0
             
-        accuracies = [r.calculate_accuracy() for r in successful_results]
-        return sum(accuracies) / len(accuracies)
+        # DTOから精度を計算
+        accuracies = []
+        for result in successful_results:
+            if result.field_results:
+                total_score = sum(fr.score for fr in result.field_results)
+                total_weight = sum(fr.weight for fr in result.field_results)
+                if total_weight > 0:
+                    accuracies.append(total_score / total_weight)
+        
+        return sum(accuracies) / len(accuracies) if accuracies else 0.0
     
     def calculate_field_accuracies(self) -> Dict[str, float]:
         """フィールド別の精度を計算"""
         field_stats: Dict[str, Dict[str, int]] = {}
         
         for result in self.results:
-            if not result.is_success():
+            if result.error:
                 continue
                 
-            for field_name, is_correct in result.get_field_accuracies().items():
+            for field_result in result.field_results:
+                field_name = field_result.field_name
+                if field_result.item_index is not None:
+                    field_name = f"{field_name}[{field_result.item_index}]"
+                
                 if field_name not in field_stats:
                     field_stats[field_name] = {"correct": 0, "total": 0}
                     
                 field_stats[field_name]["total"] += 1
-                if is_correct:
+                if field_result.is_correct:
                     field_stats[field_name]["correct"] += 1
         
         return {
@@ -102,11 +111,14 @@ class Experiment:
         field_scores: Dict[str, Dict[str, float]] = {}
         
         for result in self.results:
-            if not result.is_success():
+            if result.error:
                 continue
                 
             for field_result in result.field_results:
-                field_name = field_result.get_display_name()
+                field_name = field_result.field_name
+                if field_result.item_index is not None:
+                    field_name = f"{field_name}[{field_result.item_index}]"
+                    
                 if field_name not in field_scores:
                     field_scores[field_name] = {
                         "total_weight": 0.0,
@@ -134,8 +146,8 @@ class Experiment:
     
     def get_summary(self) -> Dict[str, Any]:
         """実験のサマリーを取得"""
-        successful_count = sum(1 for r in self.results if r.is_success())
-        failed_count = sum(1 for r in self.results if not r.is_success())
+        successful_count = sum(1 for r in self.results if not r.error)
+        failed_count = sum(1 for r in self.results if r.error)
         
         return {
             "total_documents": len(self.results),
@@ -154,3 +166,46 @@ class Experiment:
             delta = self.completed_at - self.created_at
             return int(delta.total_seconds() * 1000)
         return None
+    
+    def to_dto(self):
+        """エンティティをDTOに変換"""
+        from ...application.dto.experiment_dto import ExperimentDto
+        
+        # DocumentEvaluationDtoをdictに変換
+        results_data = []
+        for result in self.results:
+            result_dict = {
+                "document_id": result.document_id,
+                "expected_data": result.expected_data,
+                "extracted_data": result.extracted_data,
+                "field_results": [
+                    {
+                        "field_name": fr.field_name,
+                        "expected_value": fr.expected_value,
+                        "actual_value": fr.actual_value,
+                        "score": fr.score,
+                        "weight": fr.weight,
+                        "is_correct": fr.is_correct,
+                        "item_index": fr.item_index
+                    }
+                    for fr in result.field_results
+                ],
+                "extraction_time_ms": result.extraction_time_ms,
+                "error": result.error
+            }
+            results_data.append(result_dict)
+        
+        return ExperimentDto(
+            id=self.id,
+            name=self.name,
+            prompt_name=self.prompt_name,
+            dataset_name=self.dataset_name,
+            llm_endpoint=self.llm_endpoint,
+            description=self.description,
+            status=self.status.value,
+            results=results_data,
+            created_at=self.created_at,
+            started_at=getattr(self, 'started_at', None),  # 存在しない場合はNone
+            completed_at=self.completed_at,
+            error_message=self.metadata.get("error")
+        )

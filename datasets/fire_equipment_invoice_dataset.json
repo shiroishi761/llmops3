@@ -1,0 +1,440 @@
+[
+  {
+    "id": "fire_equipment_exterior_renovation_001",
+    "input": {
+      "ocr_content": "# 御見積書\n\n**PAGE** 1/1  \n**No.**00001462  \n**見積日** 2024年10月06日\n\n##宛先\n萩森様\n\n## 発行者情報\n**会社名:** 株式会社グラフト \n**住所:** 〒619-0241 京都府相楽郡精華町祝園狛ヶ坪5番地  \n**TEL:** 0774-94-4771  \n**FAX:** 0774-94-6761    \n**担当者:** 木村 晋太郎\n\n## 工事概要\n**件名:** 武森様邸  外装改修工事  \n**納入場所:** 八幡市\n\n##   御見積合計金額\n**¥1,463,369-**\n\n## 明細\n\n| 商品名 |   単位 | 数量 | 単価 | 金額 | 備考   |\n|--------|------|------|------|------|------|\n| 仮設浄水  | ㎡ | 357.6 | 150 | 53,640 |  *数量のほうんでいません、現地も一個に役済資します。 |\n|   外壁 下塗り | ㎡ | 357.6 | 600 | 214,560 |   サーフエポプレミアム |\n| 外壁 上塗り×2回 | ㎡ | 244.6 |   2,000 | 489,200 | プレミアムシリコン |\n| 外壁 上塗り×2回 |  ㎡ | 113 | 2,600 | 293,800 | スーパーセラタイト |\n|   軒天下地処理 | 式 | 1 | 18,000 | 18,000 |   *割れひび割れ、防腐剤離が多いため。パテ処理等 |\n| 軒天   上塗り×2回 | ㎡ | 53.6 | 1,800 | 96,480 |   *ガレージ天井も含みます。ケンエース62 |\n| 樋   ケレン+シリコン2回塗り | m | 27 | 728 | 19,656 | NADシリコン   |\n| ベランダ手摺 ケレン+サビ+シリコン2回塗り | 式 | 1 | 15,000 | 15,000 | |\n| 付帯部塗装 | 式 | 1 | 85,000 | 85,000   | スリムダクト/水切り/フッドデュキ/シャッターBOX |\n|   ・諸経費 | 式 | 1 | 45,000 | 45,000 |   廃材処理費、養生消耗品費、養生費等 |\n\n## 合計\n-   **税抜合計金額:** 1,330,336\n- **消費税:** 133,033\n-   **合計:** 1,463,369"
+    },
+    "expected_output": {
+      "items": [
+        {
+          "name": "仮設浄水",
+          "note": "*数量のほうんでいません、現地も一個に役済資します。",
+          "spec": "",
+          "unit": "㎡",
+          "items": [],
+          "price": 150,
+          "quantity": 357.6,
+          "sub_total": 53640,
+          "account_item": "経費"
+        },
+        {
+          "name": "外壁 下塗り",
+          "note": "サーフエポプレミアム",
+          "spec": "",
+          "unit": "㎡",
+          "items": [],
+          "price": 600,
+          "quantity": 357.6,
+          "sub_total": 214560,
+          "account_item": "外注費"
+        },
+        {
+          "name": "外壁 上塗り×2回",
+          "note": "プレミアムシリコン",
+          "spec": "",
+          "unit": "㎡",
+          "items": [],
+          "price": 2000,
+          "quantity": 244.6,
+          "sub_total": 489200,
+          "account_item": "外注費"
+        },
+        {
+          "name": "外壁 上塗り×2回",
+          "note": "スーパーセラタイト",
+          "spec": "",
+          "unit": "㎡",
+          "items": [],
+          "price": 2600,
+          "quantity": 113,
+          "sub_total": 293800,
+          "account_item": "外注費"
+        },
+        {
+          "name": "軒天下地処理",
+          "note": "*割れひび割れ、防腐剤離が多いため。パテ処理等",
+          "spec": "",
+          "unit": "式",
+          "items": [],
+          "price": 18000,
+          "quantity": 1,
+          "sub_total": 18000,
+          "account_item": "外注費"
+        },
+        {
+          "name": "軒天 上塗り×2回",
+          "note": "*ガレージ天井も含みます。ケンエース62",
+          "spec": "",
+          "unit": "㎡",
+          "items": [],
+          "price": 1800,
+          "quantity": 53.6,
+          "sub_total": 96480,
+          "account_item": "外注費"
+        },
+        {
+          "name": "樋 ケレン+シリコン2回塗り",
+          "note": "NADシリコン",
+          "spec": "",
+          "unit": "m",
+          "items": [],
+          "price": 728,
+          "quantity": 27,
+          "sub_total": 19656,
+          "account_item": "外注費"
+        },
+        {
+          "name": "ベランダ手摺 ケレン+サビ+シリコン2回塗り",
+          "note": "",
+          "spec": "",
+          "unit": "式",
+          "items": [],
+          "price": 15000,
+          "quantity": 1,
+          "sub_total": 15000,
+          "account_item": "外注費"
+        },
+        {
+          "name": "付帯部塗装",
+          "note": "",
+          "spec": "スリムダクト/水切り/フッドデュキ/シャッターBOX",
+          "unit": "式",
+          "items": [],
+          "price": 85000,
+          "quantity": 1,
+          "sub_total": 85000,
+          "account_item": "外注費"
+        },
+        {
+          "name": "諸経費",
+          "note": "廃材処理費、養生消耗品費、養生費等",
+          "spec": "",
+          "unit": "式",
+          "items": [],
+          "price": 45000,
+          "quantity": 1,
+          "sub_total": 45000,
+          "account_item": "経費"
+        }
+      ],
+      "issuer": "株式会社グラフト",
+      "doc_date": "2024-10-06",
+      "doc_type": "quotation",
+      "t_number": "",
+      "tax_type": "external",
+      "doc_title": "御見積書",
+      "sub_total": "1330336",
+      "tax_price": 133033,
+      "doc_number": "00001462",
+      "issuer_zip": "619-0241",
+      "destination": "萩森様",
+      "total_price": 1463369,
+      "payment_terms": "",
+      "issuer_address": "京都府相楽郡精華町祝園狛ヶ坪5番地",
+      "doc_transaction": "",
+      "expiration_date": "",
+      "construction_name": "武森様邸 外装改修工事",
+      "construction_site": "八幡市",
+      "issuer_customer_id": 2001,
+      "construction_period": "",
+      "issuer_phone_number": "0774-94-4771",
+      "destination_customer_id": 1001
+    }
+  },
+  {
+    "id": "fpvwlbus2aphvr21jop66n79",
+    "input": {
+      "ocr_content": "NO.1\n住宅・県民 寮備 蓄倉 単価 金額\n消火設備修繕工事内消火栓設備\nホンプモータユニット１台 消火設備\n支給品\n消防用補助高架水槽 3053台 工台 支給品\n支給品\n消火栓箱（放水銃 17 台 支給品\n消火栓箱\n屋設置口用警 台 支給品\nボース 25A×1 台 支給品\n仕切弁\n10K 50A UV型 １台 11,000 11,000\n仕切弁 10K 40A UV型 2 台 10,400 A 0\n台 7,100 14,200\n仕切弁 10K 32A UV型 ２台 5,600\n5,600\n止弁 10K 40A 5V型 1 台 6,200\n6,200\nストレーナ 10K 50A 消防認定品 1 台 15,250\n15,250\n仕送調整弁 10K 40A 1 台 310,000\n310,000\nプレッシブルチャージ 25A×50A 消防認定品 1 本\n13,300 13,300\nップレキシブルチューブ 40A×300L 消防認定品 1\n本 7,300 7,300\nプレキシブルチューブ 32A×30ML 消防認定品\n１本 7,000 7,000\n鋼管 G-3452 50A 120 M 2,697\n311,640\n鋼管 G-3452 40A 272 M 1,895 515,440\n鋼管 G-3452\n32A 25A 16 M 1,246 19,936\n鋼管 G-3452 50A VF 76 M 5,369\n408,044\n継手類 １式 1,000,000\n仕舞物材1 式\n300,000\n継科費・雑材 1 式 150,000\n諸経費 材料費小計 1\n式 3,806,310\n労務費\n配管工事費 1 式\n1,400,000\n諸経費取付調整費 1 式\n210,000\n支持金物据工取付費 1 式\n110,000\nスリーブ・インサート工事費 1 式 附属\n副工事費 1\n式 70,000\n員搬入工具費 1 式 52,000\n諸経費小計 1 式\n1,842,000\n消火設備工事株式会社\ncompany_name"
+    },
+    "expected_output": {
+      "items": [
+        {
+          "name": "ホンプモータユニット",
+          "note": "支給品",
+          "spec": "",
+          "unit": "台",
+          "items": [],
+          "price": 0,
+          "quantity": 1,
+          "sub_total": 0,
+          "account_item": "材料費"
+        },
+        {
+          "name": "消防用補助高架水槽",
+          "note": "支給品",
+          "spec": "",
+          "unit": "台",
+          "items": [],
+          "price": 0,
+          "quantity": 1,
+          "sub_total": 0,
+          "account_item": "材料費"
+        },
+        {
+          "name": "消火栓箱（放水銃）",
+          "note": "支給品",
+          "spec": "",
+          "unit": "台",
+          "items": [],
+          "price": 0,
+          "quantity": 17,
+          "sub_total": 0,
+          "account_item": "材料費"
+        },
+        {
+          "name": "仕切弁 10K 50A UV型",
+          "note": "",
+          "spec": "",
+          "unit": "台",
+          "items": [],
+          "price": 11000,
+          "quantity": 1,
+          "sub_total": 11000,
+          "account_item": "材料費"
+        },
+        {
+          "name": "仕切弁 10K 40A UV型",
+          "note": "",
+          "spec": "",
+          "unit": "台",
+          "items": [],
+          "price": 7100,
+          "quantity": 2,
+          "sub_total": 14200,
+          "account_item": "材料費"
+        },
+        {
+          "name": "仕切弁 10K 32A UV型",
+          "note": "",
+          "spec": "",
+          "unit": "台",
+          "items": [],
+          "price": 5600,
+          "quantity": 2,
+          "sub_total": 11200,
+          "account_item": "材料費"
+        },
+        {
+          "name": "止弁 10K 40A 5V型",
+          "note": "",
+          "spec": "",
+          "unit": "台",
+          "items": [],
+          "price": 6200,
+          "quantity": 1,
+          "sub_total": 6200,
+          "account_item": "材料費"
+        },
+        {
+          "name": "ストレーナ 10K 50A",
+          "note": "",
+          "spec": "消防認定品",
+          "unit": "台",
+          "items": [],
+          "price": 15250,
+          "quantity": 1,
+          "sub_total": 15250,
+          "account_item": "材料費"
+        },
+        {
+          "name": "仕送調整弁 10K 40A",
+          "note": "",
+          "spec": "",
+          "unit": "台",
+          "items": [],
+          "price": 310000,
+          "quantity": 1,
+          "sub_total": 310000,
+          "account_item": "材料費"
+        },
+        {
+          "name": "プレッシブルチャージ 25A×50A",
+          "note": "",
+          "spec": "消防認定品",
+          "unit": "本",
+          "items": [],
+          "price": 13300,
+          "quantity": 1,
+          "sub_total": 13300,
+          "account_item": "材料費"
+        },
+        {
+          "name": "ップレキシブルチューブ 40A×300L",
+          "note": "",
+          "spec": "消防認定品",
+          "unit": "本",
+          "items": [],
+          "price": 7300,
+          "quantity": 1,
+          "sub_total": 7300,
+          "account_item": "材料費"
+        },
+        {
+          "name": "プレキシブルチューブ 32A×30ML",
+          "note": "",
+          "spec": "消防認定品",
+          "unit": "本",
+          "items": [],
+          "price": 7000,
+          "quantity": 1,
+          "sub_total": 7000,
+          "account_item": "材料費"
+        },
+        {
+          "name": "鋼管 G-3452 50A",
+          "note": "",
+          "spec": "",
+          "unit": "M",
+          "items": [],
+          "price": 2697,
+          "quantity": 120,
+          "sub_total": 323640,
+          "account_item": "材料費"
+        },
+        {
+          "name": "鋼管 G-3452 40A",
+          "note": "",
+          "spec": "",
+          "unit": "M",
+          "items": [],
+          "price": 1895,
+          "quantity": 272,
+          "sub_total": 515440,
+          "account_item": "材料費"
+        },
+        {
+          "name": "鋼管 G-3452 32A 25A",
+          "note": "",
+          "spec": "",
+          "unit": "M",
+          "items": [],
+          "price": 1246,
+          "quantity": 16,
+          "sub_total": 19936,
+          "account_item": "材料費"
+        },
+        {
+          "name": "鋼管 G-3452 50A VF",
+          "note": "",
+          "spec": "",
+          "unit": "M",
+          "items": [],
+          "price": 5369,
+          "quantity": 76,
+          "sub_total": 408044,
+          "account_item": "材料費"
+        },
+        {
+          "name": "継手類",
+          "note": "",
+          "spec": "",
+          "unit": "式",
+          "items": [],
+          "price": 1000000,
+          "quantity": 1,
+          "sub_total": 1000000,
+          "account_item": "材料費"
+        },
+        {
+          "name": "仕舞物材",
+          "note": "",
+          "spec": "",
+          "unit": "式",
+          "items": [],
+          "price": 300000,
+          "quantity": 1,
+          "sub_total": 300000,
+          "account_item": "材料費"
+        },
+        {
+          "name": "継科費・雑材",
+          "note": "",
+          "spec": "",
+          "unit": "式",
+          "items": [],
+          "price": 150000,
+          "quantity": 1,
+          "sub_total": 150000,
+          "account_item": "経費"
+        },
+        {
+          "name": "配管工事費",
+          "note": "",
+          "spec": "",
+          "unit": "式",
+          "items": [],
+          "price": 1400000,
+          "quantity": 1,
+          "sub_total": 1400000,
+          "account_item": "外注費"
+        },
+        {
+          "name": "諸経費取付調整費",
+          "note": "",
+          "spec": "",
+          "unit": "式",
+          "items": [],
+          "price": 210000,
+          "quantity": 1,
+          "sub_total": 210000,
+          "account_item": "経費"
+        },
+        {
+          "name": "支持金物据工取付費",
+          "note": "",
+          "spec": "",
+          "unit": "式",
+          "items": [],
+          "price": 110000,
+          "quantity": 1,
+          "sub_total": 110000,
+          "account_item": "外注費"
+        },
+        {
+          "name": "スリーブ・インサート工事費",
+          "note": "",
+          "spec": "",
+          "unit": "式",
+          "items": [],
+          "price": 70000,
+          "quantity": 1,
+          "sub_total": 70000,
+          "account_item": "外注費"
+        },
+        {
+          "name": "員搬入工具費",
+          "note": "",
+          "spec": "",
+          "unit": "式",
+          "items": [],
+          "price": 52000,
+          "quantity": 1,
+          "sub_total": 52000,
+          "account_item": "経費"
+        }
+      ],
+      "issuer": "消火設備工事株式会社",
+      "doc_date": "",
+      "doc_type": "quotation",
+      "t_number": "",
+      "tax_type": "external",
+      "doc_title": "消火設備修繕工事",
+      "sub_total": "3806310",
+      "tax_price": 0,
+      "doc_number": "1",
+      "issuer_zip": "",
+      "destination": "",
+      "total_price": 5648310,
+      "payment_terms": "",
+      "issuer_address": "",
+      "doc_transaction": "",
+      "expiration_date": "",
+      "construction_name": "",
+      "construction_site": "",
+      "issuer_customer_id": 0,
+      "construction_period": "",
+      "issuer_phone_number": "",
+      "destination_customer_id": 0
+    }
+  }
+]

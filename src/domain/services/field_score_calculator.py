@@ -1,16 +1,16 @@
 """フィールドスコア計算のStrategyパターン"""
 from abc import ABC, abstractmethod
-from typing import Any, Optional, List, Dict
+from typing import Any, Optional
 import re
 from datetime import datetime
-from ..models.field_result import FieldEvaluationResult
+from ...application.dto.accuracy_dto import FieldEvaluationDto
 
 
 class FieldScoreCalculator(ABC):
     """フィールドスコア計算の基底クラス"""
     
     @abstractmethod
-    def calculate_score(self, field_name: str, expected: Any, actual: Any, weight: float, item_index: Optional[int] = None) -> FieldEvaluationResult:
+    def calculate(self, field_name: str, expected: Any, actual: Any, weight: float, item_index: Optional[int] = None) -> FieldEvaluationDto:
         """
         フィールドスコアを計算
         
@@ -19,45 +19,31 @@ class FieldScoreCalculator(ABC):
             expected: 期待値
             actual: 実際の値
             weight: 重み
+            item_index: アイテムインデックス（オプション）
             
         Returns:
-            FieldEvaluationResult: 計算結果
+            FieldEvaluationDto: 計算結果DTO
         """
         pass
-    
-    def calculate(self, field_name: str, expected: Any, actual: Any, weight: float) -> List[FieldEvaluationResult]:
-        """
-        フィールドを評価してリストで返す（デフォルト実装）
-        
-        Args:
-            field_name: フィールド名
-            expected: 期待値
-            actual: 実際の値
-            weight: 重み
-            
-        Returns:
-            List[FieldEvaluationResult]: 計算結果のリスト
-        """
-        result = self.calculate_score(field_name, expected, actual, weight)
-        return [result]
 
 
 class SimpleFieldCalculator(FieldScoreCalculator):
     """単純な文字列比較による計算"""
     
-    def calculate_score(self, field_name: str, expected: Any, actual: Any, weight: float, item_index: Optional[int] = None) -> FieldEvaluationResult:
+    def calculate(self, field_name: str, expected: Any, actual: Any, weight: float, item_index: Optional[int] = None) -> FieldEvaluationDto:
         """文字列として比較し、完全一致で正解"""
         is_correct = self._is_match(expected, actual)
+        score = weight if is_correct else 0.0
         
-        if is_correct:
-            return FieldEvaluationResult.create_correct(field_name, expected, actual, weight, item_index)
-        else:
-            return FieldEvaluationResult.create_incorrect(field_name, expected, actual, weight, item_index)
-    
-    def calculate(self, field_name: str, expected: Any, actual: Any, weight: float) -> List[FieldEvaluationResult]:
-        """単一フィールドを評価してリストで返す"""
-        result = self.calculate_score(field_name, expected, actual, weight)
-        return [result]
+        return FieldEvaluationDto(
+            field_name=field_name,
+            expected_value=expected,
+            actual_value=actual,
+            is_correct=is_correct,
+            score=score,
+            weight=weight,
+            item_index=item_index
+        )
     
     def _is_match(self, expected: Any, actual: Any) -> bool:
         """値が一致するかを判定"""
@@ -76,19 +62,20 @@ class SimpleFieldCalculator(FieldScoreCalculator):
 class AmountFieldCalculator(FieldScoreCalculator):
     """金額フィールド専用の計算"""
     
-    def calculate_score(self, field_name: str, expected: Any, actual: Any, weight: float, item_index: Optional[int] = None) -> FieldEvaluationResult:
+    def calculate(self, field_name: str, expected: Any, actual: Any, weight: float, item_index: Optional[int] = None) -> FieldEvaluationDto:
         """金額として比較"""
         is_correct = self._is_amount_match(expected, actual)
+        score = weight if is_correct else 0.0
         
-        if is_correct:
-            return FieldEvaluationResult.create_correct(field_name, expected, actual, weight, item_index)
-        else:
-            return FieldEvaluationResult.create_incorrect(field_name, expected, actual, weight, item_index)
-    
-    def calculate(self, field_name: str, expected: Any, actual: Any, weight: float) -> List[FieldEvaluationResult]:
-        """単一フィールドを評価してリストで返す"""
-        result = self.calculate_score(field_name, expected, actual, weight)
-        return [result]
+        return FieldEvaluationDto(
+            field_name=field_name,
+            expected_value=expected,
+            actual_value=actual,
+            is_correct=is_correct,
+            score=score,
+            weight=weight,
+            item_index=item_index
+        )
     
     def _is_amount_match(self, expected: Any, actual: Any) -> bool:
         """金額として比較"""
@@ -130,19 +117,20 @@ class DateFieldCalculator(FieldScoreCalculator):
         '%d/%m/%Y'
     ]
     
-    def calculate_score(self, field_name: str, expected: Any, actual: Any, weight: float, item_index: Optional[int] = None) -> FieldEvaluationResult:
+    def calculate(self, field_name: str, expected: Any, actual: Any, weight: float, item_index: Optional[int] = None) -> FieldEvaluationDto:
         """日付として比較"""
         is_correct = self._is_date_match(expected, actual)
+        score = weight if is_correct else 0.0
         
-        if is_correct:
-            return FieldEvaluationResult.create_correct(field_name, expected, actual, weight, item_index)
-        else:
-            return FieldEvaluationResult.create_incorrect(field_name, expected, actual, weight, item_index)
-    
-    def calculate(self, field_name: str, expected: Any, actual: Any, weight: float) -> List[FieldEvaluationResult]:
-        """単一フィールドを評価してリストで返す"""
-        result = self.calculate_score(field_name, expected, actual, weight)
-        return [result]
+        return FieldEvaluationDto(
+            field_name=field_name,
+            expected_value=expected,
+            actual_value=actual,
+            is_correct=is_correct,
+            score=score,
+            weight=weight,
+            item_index=item_index
+        )
     
     def _is_date_match(self, expected: Any, actual: Any) -> bool:
         """日付として比較"""
@@ -176,82 +164,6 @@ class DateFieldCalculator(FieldScoreCalculator):
         raise ValueError(f"日付形式を解析できません: {value_str}")
 
 
-class ItemsFieldCalculator(FieldScoreCalculator):
-    """明細項目フィールド専用の計算"""
-    
-    def __init__(self, items_matching_service=None):
-        self.items_matching_service = items_matching_service
-    
-    def calculate_score(self, field_name: str, expected: Any, actual: Any, weight: float, item_index: Optional[int] = None) -> FieldEvaluationResult:
-        """明細項目として比較"""
-        if not self.items_matching_service:
-            # サービスが利用できない場合は単純比較
-            is_correct = expected == actual
-            details = None
-        else:
-            # 複雑なマッチングを実行
-            expected_items = expected if isinstance(expected, list) else []
-            actual_items = actual if isinstance(actual, list) else []
-            
-            accuracy, matches = self.items_matching_service.calculate_items_accuracy(
-                expected_items, actual_items
-            )
-            
-            # 80%以上で正解とする
-            is_correct = accuracy >= 0.8
-            details = {
-                "items_accuracy": accuracy,
-                "items_matches": [
-                    {
-                        "expected": match.expected_item,
-                        "matched": match.matched_item,
-                        "score": match.match_score,
-                        "field_matches": match.field_matches
-                    }
-                    for match in matches
-                ]
-            }
-        
-        if is_correct:
-            return FieldEvaluationResult.create_correct(field_name, expected, actual, weight, item_index, details)
-        else:
-            return FieldEvaluationResult.create_incorrect(field_name, expected, actual, weight, item_index, details)
-    
-    def calculate(self, field_name: str, expected_items: List[Dict], actual_items: List[Dict], 
-                  field_weights: Dict[str, float], default_weight: float) -> List[FieldEvaluationResult]:
-        """明細項目を評価してフィールド結果のリストを返す"""
-        results = []
-        
-        # シンプルなアプローチ: 各アイテムを順序で比較
-        max_items = max(len(expected_items), len(actual_items))
-        
-        for item_index in range(max_items):
-            expected_item = expected_items[item_index] if item_index < len(expected_items) else {}
-            actual_item = actual_items[item_index] if item_index < len(actual_items) else {}
-            
-            # 各サブフィールドを評価
-            sub_fields = ['name', 'quantity', 'price', 'sub_total', 'unit', 'spec', 'note', 'account_item']
-            
-            for sub_field in sub_fields:
-                field_key = f'items.{sub_field}'
-                weight = field_weights.get(field_key, default_weight)
-                
-                expected_value = expected_item.get(sub_field)
-                actual_value = actual_item.get(sub_field)
-                
-                # 適切なCalculatorで評価
-                if sub_field in ['price', 'sub_total']:
-                    calculator = AmountFieldCalculator()
-                else:
-                    calculator = SimpleFieldCalculator()
-                
-                result = calculator.calculate_score(
-                    field_key, expected_value, actual_value, weight, item_index
-                )
-                results.append(result)
-        
-        return results
-
 
 class FieldScoreCalculatorFactory:
     """フィールドに応じて適切なCalculatorを選択するFactory"""
@@ -261,8 +173,7 @@ class FieldScoreCalculatorFactory:
         self._calculators = {
             'simple': SimpleFieldCalculator(),
             'amount': AmountFieldCalculator(),
-            'date': DateFieldCalculator(),
-            'items': ItemsFieldCalculator(items_matching_service)
+            'date': DateFieldCalculator()
         }
         
         # フィールド名とCalculatorのマッピング
@@ -271,8 +182,7 @@ class FieldScoreCalculatorFactory:
             'tax_price': 'amount',
             'sub_total': 'amount',
             'doc_date': 'date',
-            'expiration_date': 'date',
-            'items': 'items'
+            'expiration_date': 'date'
         }
     
     def get_calculator(self, field_name: str) -> FieldScoreCalculator:

@@ -4,8 +4,6 @@ uvicorn[standard]==0.27.0
 pydantic==2.5.3
 pydantic-settings==2.1.0
 
-# Langfuse
-langfuse==2.20.0
 
 # Google AI
 google-genai==1.24.0

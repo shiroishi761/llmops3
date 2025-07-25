@@ -1,26 +1,26 @@
 """Geminiサービス"""
 import time
-from typing import Dict, Any, Optional, Union
+from typing import Dict, Any, Union, Optional
 import json
 import os
 
 from google import genai
 from google.genai import types
 
-from ..config.configuration_service import ConfigurationService
+from ...application.services.configuration_service import ConfigurationService
 
 
 class GeminiService:
     """Google Gemini APIとの連携を管理するサービス"""
     
-    def __init__(self, config_service: Optional[ConfigurationService] = None):
+    def __init__(self, config_service: ConfigurationService):
         """
         初期化
         
         Args:
-            config_service: 設定サービス
+            config_service: 設定サービス（必須）
         """
-        self.config = config_service or ConfigurationService()
+        self.config = config_service
         
         # 環境変数にAPI keyを設定
         os.environ["GOOGLE_API_KEY"] = self.config.gemini_api_key

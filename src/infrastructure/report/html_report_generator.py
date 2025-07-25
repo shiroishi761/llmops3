@@ -63,9 +63,32 @@ class HTMLReportGenerator:
                 extracted_items = self._parse_items(processed_result['extracted_data'].get('items'))
                 processed_result['extracted_data']['items'] = extracted_items
             
-            # 精度をフォーマット
-            if 'accuracy' in processed_result:
-                processed_result['accuracy_formatted'] = "{:.1f}".format(processed_result['accuracy'] * 100)
+            # 新しいDTOベースの形式から精度を計算
+            if 'field_results' in processed_result and processed_result['field_results']:
+                # field_resultsから精度を計算
+                total_score = sum(fr.get('score', 0) for fr in processed_result['field_results'])
+                total_weight = sum(fr.get('weight', 0) for fr in processed_result['field_results'])
+                accuracy = total_score / total_weight if total_weight > 0 else 0.0
+                processed_result['accuracy'] = accuracy
+                processed_result['accuracy_formatted'] = "{:.1f}".format(accuracy * 100)
+                
+                # field_resultsをaccuracy_metricsに変換
+                accuracy_metrics = []
+                for fr in processed_result['field_results']:
+                    accuracy_metrics.append({
+                        'field_name': fr.get('field_name', ''),
+                        'expected_value': fr.get('expected_value'),
+                        'actual_value': fr.get('actual_value'),
+                        'score': fr.get('score', 0),
+                        'weight': fr.get('weight', 0),
+                        'is_correct': fr.get('is_correct', False)
+                    })
+                processed_result['accuracy_metrics'] = accuracy_metrics
+            else:
+                # 精度情報がない場合のデフォルト値
+                processed_result['accuracy'] = 0.0
+                processed_result['accuracy_formatted'] = "0.0"
+                processed_result['accuracy_metrics'] = []
             
             # accuracy_metricsを処理して、フィールドを固定順序で並べ替える
             if 'accuracy_metrics' in processed_result:

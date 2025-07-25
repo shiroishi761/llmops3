@@ -8,8 +8,6 @@ from unittest.mock import Mock
 def mock_env(monkeypatch):
     """テスト用環境変数"""
     monkeypatch.setenv("GEMINI_API_KEY", "test-gemini-key")
-    monkeypatch.setenv("LANGFUSE_PUBLIC_KEY", "test-public-key")
-    monkeypatch.setenv("LANGFUSE_SECRET_KEY", "test-secret-key")
     
 
 @pytest.fixture
@@ -48,22 +46,6 @@ description: テスト用の実験
     return str(config_path)
 
 
-@pytest.fixture
-def mock_langfuse_response():
-    """Langfuseレスポンスのモック"""
-    return {
-        "prompt": "Extract data from: {document}",
-        "dataset": [
-            {
-                "id": "item-1",
-                "document": "請求書 #12345\\n合計: 10,000円",
-                "expected": {
-                    "invoice_number": "12345",
-                    "total_price": "10000"
-                }
-            }
-        ]
-    }
 
 
 @pytest.fixture

@@ -60,7 +60,7 @@ pip install -r requirements.txt
 python -m src.cli run-experiment experiments/invoice_test.yml
 
 # 開発サーバーの起動（API利用時）
-uvicorn src.main:app --reload --host 0.0.0.0 --port 8000
+uvicorn src.interfaces.api.main:app --reload --host 0.0.0.0 --port 8000
 
 # テストの実行
 pytest
@@ -155,12 +155,34 @@ LANGFUSE_SECRET_KEY=your-langfuse-secret-key
 - 環境別設定ファイル
 - API経由での実行（まずはCLIのみ）
 
+## プロンプト管理
+
+### プロンプトの同期
+
+Langfuseで管理されているプロンプトをローカルファイルとして同期：
+
+```bash
+# 単一プロンプトの同期
+python -m src.cli sync-prompt invoice_extraction_prompt_v1
+
+# Dockerコンテナ内での実行
+docker-compose run --rm cli python -m src.cli sync-prompt invoice_extraction_prompt_v1
+```
+
+同期されたプロンプトは `prompts/` フォルダに保存され、実験実行時にローカルファイルから読み込まれます。
+
+### プロンプトファイルの管理
+
+- **場所**: `prompts/` フォルダ
+- **形式**: UTF-8エンコードのテキストファイル
+- **バージョン管理**: Gitで管理
+- **変数置換**: `{variable_name}` 形式で変数埋め込み
+
 ## 実験の実行方法
 
 ### 1. 事前準備
-Langfuseで以下を作成：
-- プロンプトテンプレート（例: "invoice_extraction_prompt_v1"）
-- データセット（例: "invoice_dataset_202401"）正解データ含む
+- プロンプトテンプレート：Langfuseから同期してローカル管理
+- データセット：Langfuseで管理（例: "invoice_dataset_202401"）正解データ含む
 
 ### 2. 実験設定ファイルの作成
 `experiments/`ディレクトリに実験設定YAMLファイルを作成：

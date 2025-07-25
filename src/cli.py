@@ -1,10 +1,31 @@
 """CLIインターフェース"""
 import sys
 import argparse
+import asyncio
+import logging
 from pathlib import Path
 
 from .application.use_cases.run_experiment import RunExperimentUseCase
+from .application.services.configuration_service import ConfigurationService
+from .application.services.prompt_service import PromptService
+from .application.services.dataset_service import DatasetService
+from .infrastructure.external_services.llm_client import LLMClient
+from .infrastructure.repositories.file_experiment_repository import FileExperimentRepository
+from .domain.services.accuracy_evaluation_service import AccuracyEvaluationService
+from .domain.services.items_matching_service import ItemsMatchingService
+from .infrastructure.external_services.gemini_service import GeminiService
 from .infrastructure.report.html_report_generator import HTMLReportGenerator
+
+
+def setup_logging():
+    """ログ設定を初期化"""
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+        handlers=[
+            logging.StreamHandler(sys.stdout)
+        ]
+    )
 
 
 def main():
@@ -44,10 +65,14 @@ def main():
         help="実験結果ファイルのパス (例: results/experiment_20240115_143052.json)"
     )
     
+    
     args = parser.parse_args()
     
+    # ログ設定を初期化
+    setup_logging()
+    
     if args.command == "run-experiment":
-        run_experiment(args.config, args.name)
+        asyncio.run(run_experiment(args.config, args.name))
     elif args.command == "generate-report":
         generate_report(args.result_path)
     else:
@@ -55,22 +80,42 @@ def main():
         sys.exit(1)
 
 
-def run_experiment(config_path: str, experiment_name: str):
+async def run_experiment(config_path: str, experiment_name: str):
     """実験を実行"""
     try:
         # パスの検証
         path = Path(config_path)
         if not path.exists():
+            logging.error(f"実験設定ファイルが見つかりません: {config_path}")
             print(f"エラー: 実験設定ファイルが見つかりません: {config_path}")
             sys.exit(1)
             
+        logging.info(f"実験設定を読み込んでいます: {config_path}")
+        logging.info(f"実験名: {experiment_name}")
         print(f"実験設定を読み込んでいます: {config_path}")
         print(f"実験名: {experiment_name}")
         print("-" * 50)
         
-        # ユースケースを実行
-        use_case = RunExperimentUseCase()
-        result = use_case.execute(config_path, experiment_name)
+        # 依存関係を直接注入
+        config_service = ConfigurationService(field_weights_config_path="config/config.yml")
+        prompt_service = PromptService()
+        dataset_service = DatasetService()
+        llm_client = LLMClient()
+        experiment_repository = FileExperimentRepository()
+        accuracy_service = AccuracyEvaluationService()
+        gemini_service = GeminiService(config_service)
+        items_matching_service = ItemsMatchingService(gemini_service)
+        
+        use_case = RunExperimentUseCase(
+            config_service=config_service,
+            prompt_service=prompt_service,
+            dataset_service=dataset_service,
+            llm_client=llm_client,
+            experiment_repository=experiment_repository,
+            accuracy_service=accuracy_service,
+            items_matching_service=items_matching_service
+        )
+        result = await use_case.execute(config_path, experiment_name)
         
         print("-" * 50)
         print("\n実験結果:")
@@ -111,6 +156,7 @@ def run_experiment(config_path: str, experiment_name: str):
         print("\n\n実験が中断されました")
         sys.exit(1)
     except Exception as e:
+        logging.error(f"エラーが発生しました: {str(e)}")
         print(f"\nエラーが発生しました: {str(e)}")
         sys.exit(1)
 
@@ -121,10 +167,11 @@ def generate_report(result_path: str):
         # パスの検証
         path = Path(result_path)
         if not path.exists():
+            logging.error(f"結果ファイルが見つかりません: {result_path}")
             print(f"エラー: 結果ファイルが見つかりません: {result_path}")
             sys.exit(1)
         
-        print(f"結果ファイルを読み込んでいます: {result_path}")
+        logging.info(f"結果ファイルを読み込んでいます: {result_path}")
         
         # レポート生成
         generator = HTMLReportGenerator()
@@ -134,10 +181,13 @@ def generate_report(result_path: str):
         print(f"ブラウザでファイルを開いて確認してください。")
         
     except Exception as e:
+        logging.error(f"レポート生成エラー: {str(e)}")
         print(f"\nレポート生成エラー: {str(e)}")
         import traceback
         traceback.print_exc()
         sys.exit(1)
+
+
 
 
 if __name__ == "__main__":
