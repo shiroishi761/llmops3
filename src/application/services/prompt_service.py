@@ -1,8 +1,8 @@
 """ローカルプロンプト管理サービス"""
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Dict, Optional, List
 import os
-
+from ...domain.models.prompt_config import PromptConfig
 
 class PromptService:
     """ローカルファイルベースのプロンプト管理サービス"""
@@ -105,3 +105,20 @@ class PromptService:
             存在するかどうか
         """
         return self.get_prompt_path(prompt_name).exists()
+    
+    def find_entry_prompt(self, prompts_config: List[PromptConfig]) -> Optional[str]:
+        """
+        エントリポイントとなるプロンプトを取得
+        シンプルに最初のプロンプトを返す
+        
+        Args:
+            prompts_config: PromptConfigのリスト
+            
+        Returns:
+            エントリポイントのプロンプト名、または None
+        """
+        if not prompts_config:
+            return None
+        
+        # 最初のプロンプト名を返す
+        return prompts_config[0].prompt_name

@@ -5,7 +5,6 @@ from datetime import datetime
 
 from .field_result import FieldEvaluationResult, FieldEvaluationResultCollection
 
-
 @dataclass
 class DocumentEvaluationResult:
     """
@@ -15,16 +14,12 @@ class DocumentEvaluationResult:
     
     Attributes:
         document_id: 文書ID
-        expected_data: 期待される抽出データ
-        extracted_data: 実際に抽出されたデータ
         field_results: 各フィールドの評価結果
         extraction_time_ms: 抽出にかかった時間（ミリ秒）
         error: エラーメッセージ（エラー時のみ）
         created_at: 作成日時
     """
     document_id: str
-    expected_data: Dict[str, Any]
-    extracted_data: Dict[str, Any]
     field_results: List[FieldEvaluationResult] = field(default_factory=list)
     extraction_time_ms: Optional[int] = None
     error: Optional[str] = None

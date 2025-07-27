@@ -1,0 +1,117 @@
+input:
+  ocr_content: "# 御見積書\n\n**PAGE** 1/1  \n**No.**00001462  \n**見積日** 2024年10月06日\n\n##宛先\n萩森様\n\n## 発行者情報\n**会社名:** 株式会社グラフト \n**住所:** 〒619-0241 京都府相楽郡精華町祝園狛ヶ坪5番地  \n**TEL:** 0774-94-4771  \n**FAX:** 0774-94-6761    \n**担当者:** 木村 晋太郎\n\n## 工事概要\n**件名:** 武森様邸  外装改修工事  \n**納入場所:** 八幡市\n\n##   御見積合計金額\n**¥1,463,369-**\n\n## 明細\n\n| 商品名 |   単位 | 数量 | 単価 | 金額 | 備考   |\n|--------|------|------|------|------|------|\n| 仮設浄水  | ㎡ | 357.6 | 150 | 53,640 |  *数量のほうんでいません、現地も一個に役済資します。 |\n|   外壁 下塗り | ㎡ | 357.6 | 600 | 214,560 |   サーフエポプレミアム |\n| 外壁 上塗り×2回 | ㎡ | 244.6 |   2,000 | 489,200 | プレミアムシリコン |\n| 外壁 上塗り×2回 |  ㎡ | 113 | 2,600 | 293,800 | スーパーセラタイト |\n|   軒天下地処理 | 式 | 1 | 18,000 | 18,000 |   *割れひび割れ、防腐剤離が多いため。パテ処理等 |\n| 軒天   上塗り×2回 | ㎡ | 53.6 | 1,800 | 96,480 |   *ガレージ天井も含みます。ケンエース62 |\n| 樋   ケレン+シリコン2回塗り | m | 27 | 728 | 19,656 | NADシリコン   |\n| ベランダ手摺 ケレン+サビ+シリコン2回塗り | 式 | 1 | 15,000 | 15,000 | |\n| 付帯部塗装 | 式 | 1 | 85,000 | 85,000   | スリムダクト/水切り/フッドデュキ/シャッターBOX |\n|   ・諸経費 | 式 | 1 | 45,000 |\
+    \ 45,000 |   廃材処理費、養生消耗品費、養生費等 |\n\n## 合計\n-   **税抜合計金額:** 1,330,336\n- **消費税:** 133,033\n-   **合計:** 1,463,369"
+expected_output:
+  items:
+    - name: 仮設浄水
+      note: '*数量のほうんでいません、現地も一個に役済資します。'
+      spec: ''
+      unit: ㎡
+      items: []
+      price: 150
+      quantity: 357.6
+      sub_total: 53640
+      account_item: 経費
+    - name: 外壁 下塗り
+      note: サーフエポプレミアム
+      spec: ''
+      unit: ㎡
+      items: []
+      price: 600
+      quantity: 357.6
+      sub_total: 214560
+      account_item: 外注費
+    - name: 外壁 上塗り×2回
+      note: プレミアムシリコン
+      spec: ''
+      unit: ㎡
+      items: []
+      price: 2000
+      quantity: 244.6
+      sub_total: 489200
+      account_item: 外注費
+    - name: 外壁 上塗り×2回
+      note: スーパーセラタイト
+      spec: ''
+      unit: ㎡
+      items: []
+      price: 2600
+      quantity: 113
+      sub_total: 293800
+      account_item: 外注費
+    - name: 軒天下地処理
+      note: '*割れひび割れ、防腐剤離が多いため。パテ処理等'
+      spec: ''
+      unit: 式
+      items: []
+      price: 18000
+      quantity: 1
+      sub_total: 18000
+      account_item: 外注費
+    - name: 軒天 上塗り×2回
+      note: '*ガレージ天井も含みます。ケンエース62'
+      spec: ''
+      unit: ㎡
+      items: []
+      price: 1800
+      quantity: 53.6
+      sub_total: 96480
+      account_item: 外注費
+    - name: 樋 ケレン+シリコン2回塗り
+      note: NADシリコン
+      spec: ''
+      unit: m
+      items: []
+      price: 728
+      quantity: 27
+      sub_total: 19656
+      account_item: 外注費
+    - name: ベランダ手摺 ケレン+サビ+シリコン2回塗り
+      note: ''
+      spec: ''
+      unit: 式
+      items: []
+      price: 15000
+      quantity: 1
+      sub_total: 15000
+      account_item: 外注費
+    - name: 付帯部塗装
+      note: ''
+      spec: スリムダクト/水切り/フッドデュキ/シャッターBOX
+      unit: 式
+      items: []
+      price: 85000
+      quantity: 1
+      sub_total: 85000
+      account_item: 外注費
+    - name: 諸経費
+      note: 廃材処理費、養生消耗品費、養生費等
+      spec: ''
+      unit: 式
+      items: []
+      price: 45000
+      quantity: 1
+      sub_total: 45000
+      account_item: 経費
+  issuer: 株式会社グラフト
+  doc_date: '2024-10-06'
+  doc_type: quotation
+  t_number: ''
+  tax_type: external
+  doc_title: 御見積書
+  sub_total: 1330336
+  tax_price: 133033
+  doc_number: '00001462'
+  issuer_zip: 619-0241
+  destination: 萩森様
+  total_price: 1463369
+  payment_terms: ''
+  issuer_address: 京都府相楽郡精華町祝園狛ヶ坪5番地
+  doc_transaction: ''
+  expiration_date: ''
+  construction_name: 武森様邸 外装改修工事
+  construction_site: 八幡市
+  issuer_customer_id: '2001'
+  construction_period: ''
+  issuer_phone_number: 0774-94-4771
+  destination_customer_id: '1001'

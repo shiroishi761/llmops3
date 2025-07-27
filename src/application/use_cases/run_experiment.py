@@ -21,11 +21,11 @@ from ..interfaces import (
 from ...domain.interfaces import AccuracyEvaluationInterface
 from ...domain.interfaces.items_matching_interface import ItemsMatchingInterface
 from ...domain.repositories.experiment_repository import ExperimentRepository
-
+from ..utils.experiment_config_loader import load_experiment_config
 
 class RunExperimentUseCase:
     """実験を実行するユースケース"""
-    
+
     def __init__(
         self,
         config_service: ConfigurationInterface,
@@ -38,15 +38,15 @@ class RunExperimentUseCase:
     ):
         """
         初期化
-        
+
         Args:
-            config_service: 設定サービス（必須）
-            prompt_service: プロンプトサービス（必須）
-            dataset_service: データセットサービス（必須）
-            llm_client: LLMクライアント（必須）
-            experiment_repository: 実験リポジトリ（必須）
-            accuracy_service: 精度評価サービス（必須）
-            items_matching_service: アイテムマッチングサービス（必須）
+            config_service: 設定サービス
+            prompt_service: プロンプトサービス
+            dataset_service: データセットサービス
+            llm_client: LLMクライアント
+            experiment_repository: 実験リポジトリ
+            accuracy_service: 精度評価サービス
+            items_matching_service: アイテムマッチングサービス
         """
         self.config_service = config_service
         self.prompt_service = prompt_service
@@ -55,66 +55,71 @@ class RunExperimentUseCase:
         self.experiment_repository = experiment_repository
         self.accuracy_service = accuracy_service
         self.items_matching_service = items_matching_service
-        
+
     async def execute(self, experiment_config_path: str, experiment_name: Optional[str] = None) -> ExperimentResultDto:
         """
         実験設定ファイルから実験を実行
-        
+
         Args:
             experiment_config_path: 実験設定ファイルのパス
             experiment_name: 実験名（指定した場合はその実験のみ実行）
-            
+
         Returns:
             実験結果DTO
         """
         # 設定ファイルを読み込み
         experiment_config = self.config_service.load_experiment_config(experiment_config_path, experiment_name)
+        # プロンプト設定を準備（ConfigurationServiceを使用）
+        prompts_config = self.config_service.get_prompt_config(experiment_config)
+
+        if not prompts_config:
+            raise ValueError("プロンプト設定（prompts）がありません")
+
         # 実験エンティティを作成
         experiment = Experiment(
             id=str(uuid.uuid4()),
             name=experiment_config["experiment_name"],
-            prompt_name=experiment_config["prompt_name"],
+            prompts=prompts_config,
             dataset_name=experiment_config["dataset_name"],
             llm_endpoint=experiment_config["llm_endpoint"],
             description=experiment_config.get("description")
         )
-        
+
         # 実験を開始
         experiment.mark_as_running()
         logging.info(f"実験を開始します: {experiment_config['experiment_name']}")
-        
+
         errors: List[ErrorDto] = []
-        
+
         try:
-            # プロンプトを取得
-            logging.info(f"プロンプトを取得中: {experiment_config['prompt_name']}")
-            prompt_template = self.prompt_service.get_prompt(experiment_config["prompt_name"])
-            
+            # プロンプト設定をログに出力
+            logging.info(f"プロンプト設定: {[(p.llm_name, p.prompt_name) for p in prompts_config]}")
+
             # データセットを取得
             logging.info(f"データセットを取得中: {experiment_config['dataset_name']}")
-            documents = self.dataset_service.get_dataset(experiment_config["dataset_name"])
+            datasets = self.dataset_service.get_dataset(experiment_config["dataset_name"])
             logging.info(f"ローカルデータセットを使用します")
-            logging.info(f"データセット内のドキュメント数: {len(documents)}")
-            
+            logging.info(f"データセット内のドキュメント数: {len(datasets)}")
+
             # フィールド重みを取得
             field_weights = self.config_service.get_field_weights_dict()
             default_weight = self.config_service.get_default_weight()
-            
+
             # 各ドキュメントを処理
-            for i, document in enumerate(documents):
-                logging.info(f"処理中 ({i+1}/{len(documents)}): {document['id']}")
-                
+            for i, dataset in enumerate(datasets):
+                logging.info(f"処理中 ({i+1}/{len(datasets)}): {dataset['id']}")
+
                 try:
                     # ドキュメント処理
                     result = await self._process_document(
-                        document,
-                        prompt_template,
+                        dataset,
                         experiment_config["llm_endpoint"],
                         field_weights,
-                        default_weight
+                        default_weight,
+                        prompts_config
                     )
                     experiment.add_result(result)
-                    
+
                     if not result.error:
                         # DTOから精度を計算
                         if result.field_results:
@@ -127,37 +132,37 @@ class RunExperimentUseCase:
                     else:
                         logging.error(f"  ✗ 失敗: {result.error}")
                         errors.append(ErrorDto(
-                            document_id=document['id'],
+                            document_id=dataset['id'],
                             error_message=result.error or "Unknown error",
                             error_type="extraction_error"
                         ))
-                        
+
                 except Exception as e:
                     logging.error(f"  ✗ エラー: {str(e)}")
                     errors.append(ErrorDto(
-                        document_id=document['id'],
+                        document_id=dataset['id'],
                         error_message=str(e),
                         error_type="processing_error"
                     ))
-            
+
             # 実験を完了
             experiment.mark_as_completed()
             logging.info("実験が完了しました")
-            
+
         except Exception as e:
             # 実験を失敗として記録
             experiment.mark_as_failed(str(e))
             logging.error(f"実験が失敗しました: {str(e)}")
             raise
-            
+
         finally:
             pass
-            
+
         # 結果を保存（DTOに変換）
         experiment_dto = experiment.to_dto()
         result_path = self.experiment_repository.save(experiment_dto)
         logging.info(f"結果を保存しました: {result_path}")
-        
+
         # 結果DTOを作成
         summary = experiment.get_summary()
         return ExperimentResultDto(
@@ -175,71 +180,70 @@ class RunExperimentUseCase:
             errors=errors,
             result_file_path=str(result_path)
         )
-    
-    
+
     async def _process_document(
         self,
-        document: Dict[str, Any],
-        prompt_template: str,
+        dataset: Dict[str, Any],
         llm_endpoint: str,
         field_weights: Dict[str, float],
-        default_weight: float
+        default_weight: float,
+        prompts_config: List[Any]
     ) -> DocumentEvaluationDto:
         """単一のドキュメントを処理"""
-        document_id = document["id"]
-        input_data = document["input"]
-        expected_data = document["expected_output"]
-        
+        document_id = dataset["id"]
+        input_data = dataset["input"]
+        expected_data = dataset["expected_output"]
+
         try:
-            # プロンプトに変数を埋め込み
-            # input_dataの各キーを対応する変数に置換
-            prompt = prompt_template
-            for key, value in input_data.items():
-                placeholder = f"{{{key}}}"
-                if isinstance(value, str):
-                    prompt = prompt.replace(placeholder, value)
-                else:
-                    # 画像データなど、文字列でない場合はそのまま使用
-                    prompt = prompt.replace(placeholder, str(value))
-            
             # LLMエンドポイント経由で抽出
+            # 入力データとプロンプト設定を送信
             start_time = time.time()
+            
+            # プロンプト設定をシンプルな辞書形式に変換
+            prompts_config_dict = [
+                {"llm_name": p.llm_name, "prompt_name": p.prompt_name}
+                for p in prompts_config
+            ]
+            
             extraction_response = await self.llm_client.extract_async(
                 llm_endpoint=llm_endpoint,
-                prompt=prompt
+                input_data=input_data,
+                config={"prompts": prompts_config_dict}
             )
             extraction_time_ms = extraction_response.get("extraction_time_ms", int((time.time() - start_time) * 1000))
-            
+
             extracted_data = extraction_response.get("extracted_data", {})
-            
+
             # itemsフィールドのマッチング処理をサービスに委譲
-            expected_data, extracted_data = self.items_matching_service.process_matched_items(
-                expected_data, extracted_data
-            )
-            
+            # itemsフィールドのみを渡して、マッチング済みのitemsを取得
+            if "items" in expected_data and "items" in extracted_data:
+                matched_expected_items, matched_extracted_items = self.items_matching_service.match_and_reorder_items(
+                    expected_data["items"],
+                    extracted_data["items"]
+                )
+                # マッチング済みのitemsで元のデータを更新
+                expected_data["items"] = matched_expected_items
+                extracted_data["items"] = matched_extracted_items
+
             # 精度を評価
             field_results_dto = self.accuracy_service.evaluate_extraction(
-                expected_data,
-                extracted_data,
-                field_weights,
-                default_weight
+                expected=expected_data,
+                actual=extracted_data,
+                field_weights=field_weights,
+                default_weight=default_weight
             )
-            
+
             # DTOで結果を作成
             return DocumentEvaluationDto(
                 document_id=document_id,
-                expected_data=expected_data,
-                extracted_data=extracted_data,
                 field_results=field_results_dto,
                 extraction_time_ms=extraction_time_ms
             )
-            
+
         except Exception as e:
             # エラー時の結果
             return DocumentEvaluationDto(
                 document_id=document_id,
-                expected_data=expected_data,
-                extracted_data={},
                 field_results=[],
                 error=str(e)
             )

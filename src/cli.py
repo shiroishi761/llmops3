@@ -15,7 +15,7 @@ from .domain.services.accuracy_evaluation_service import AccuracyEvaluationServi
 from .domain.services.items_matching_service import ItemsMatchingService
 from .infrastructure.external_services.gemini_service import GeminiService
 from .infrastructure.report.html_report_generator import HTMLReportGenerator
-
+from .application.utils.experiment_config_loader import load_experiment_config as load_exp_config
 
 def setup_logging():
     """ログ設定を初期化"""
@@ -26,7 +26,6 @@ def setup_logging():
             logging.StreamHandler(sys.stdout)
         ]
     )
-
 
 def main():
     """メインエントリーポイント"""
@@ -42,16 +41,9 @@ def main():
         help="実験を実行する"
     )
     run_parser.add_argument(
-        "--name",
+        "experiment_file",
         type=str,
-        required=True,
-        help="実験名 (experiments.ymlで定義された実験名)"
-    )
-    run_parser.add_argument(
-        "--config",
-        type=str,
-        default="experiments/experiments.yml",
-        help="実験設定ファイルのパス (デフォルト: experiments/experiments.yml)"
+        help="実験設定ファイルのパス (例: experiments/gemini_1.5_flash_test.yml)"
     )
     
     # generate-report コマンド
@@ -65,36 +57,66 @@ def main():
         help="実験結果ファイルのパス (例: results/experiment_20240115_143052.json)"
     )
     
-    
     args = parser.parse_args()
     
     # ログ設定を初期化
     setup_logging()
     
     if args.command == "run-experiment":
-        asyncio.run(run_experiment(args.config, args.name))
+        asyncio.run(run_experiment_from_file(args.experiment_file))
     elif args.command == "generate-report":
         generate_report(args.result_path)
     else:
         parser.print_help()
         sys.exit(1)
 
-
-async def run_experiment(config_path: str, experiment_name: str):
-    """実験を実行"""
+async def run_experiment_from_file(experiment_file: str):
+    """単一の実験設定ファイルから実験を実行"""
     try:
-        # パスの検証
-        path = Path(config_path)
+        # YAMLファイルを読み込み
+        import yaml
+        path = Path(experiment_file)
         if not path.exists():
-            logging.error(f"実験設定ファイルが見つかりません: {config_path}")
-            print(f"エラー: 実験設定ファイルが見つかりません: {config_path}")
+            logging.error(f"実験設定ファイルが見つかりません: {experiment_file}")
+            print(f"エラー: 実験設定ファイルが見つかりません: {experiment_file}")
             sys.exit(1)
+        
+        # 新しいローダーで設定を読み込み
+        exp_config = load_exp_config(experiment_file)
+        
+        # 辞書形式に変換
+        experiment_config = {
+            'experiment_name': exp_config.experiment_name,
+            'prompts': [
+                {
+                    'llm_name': prompt.llm_name,
+                    'prompt_name': prompt.prompt_name
+                }
+                for prompt in exp_config.get_prompt_configs()
+            ],
+            'dataset_name': exp_config.dataset_name,
+            'llm_endpoint': exp_config.llm_endpoint,
+            'description': exp_config.description
+        }
+        
+        experiment_name = experiment_config.get('experiment_name', 'unnamed_experiment')
             
-        logging.info(f"実験設定を読み込んでいます: {config_path}")
+        logging.info(f"実験設定を読み込んでいます: {experiment_file}")
         logging.info(f"実験名: {experiment_name}")
-        print(f"実験設定を読み込んでいます: {config_path}")
+        print(f"実験設定を読み込んでいます: {experiment_file}")
         print(f"実験名: {experiment_name}")
         print("-" * 50)
+        
+        # experiments.yml形式に変換
+        experiments_data = {
+            "experiments": [experiment_config]
+        }
+        
+        # 一時ファイルを作成
+        import tempfile
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.yml', delete=False) as f:
+            yaml.dump(experiments_data, f, allow_unicode=True)
+            temp_config_path = f.name
         
         # 依存関係を直接注入
         config_service = ConfigurationService(field_weights_config_path="config/config.yml")
@@ -115,7 +137,11 @@ async def run_experiment(config_path: str, experiment_name: str):
             accuracy_service=accuracy_service,
             items_matching_service=items_matching_service
         )
-        result = await use_case.execute(config_path, experiment_name)
+        try:
+            result = await use_case.execute(temp_config_path, experiment_name)
+        finally:
+            # 一時ファイルを削除
+            Path(temp_config_path).unlink(missing_ok=True)
         
         print("-" * 50)
         print("\n実験結果:")
@@ -160,7 +186,6 @@ async def run_experiment(config_path: str, experiment_name: str):
         print(f"\nエラーが発生しました: {str(e)}")
         sys.exit(1)
 
-
 def generate_report(result_path: str):
     """実験結果からHTMLレポートを生成"""
     try:
@@ -186,9 +211,6 @@ def generate_report(result_path: str):
         import traceback
         traceback.print_exc()
         sys.exit(1)
-
-
-
 
 if __name__ == "__main__":
     main()

@@ -2,7 +2,6 @@
 from typing import List, Dict, Any, Optional
 from ..models.field_result import FieldEvaluationResult
 
-
 class FieldEvaluationAnalysisService:
     """FieldEvaluationResultの分析・集計を行うドメインサービス"""
     

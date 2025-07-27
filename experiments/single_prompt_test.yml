@@ -1,0 +1,8 @@
+# 単一プロンプトの実験（エントリポイント指定不要）
+experiment_name: "単一プロンプト抽出テスト"
+prompts:
+  - llm_name: "extraction_service"
+    prompt_name: "invoice_extraction_prompt_v1"
+dataset_name: "fire_equipment_invoice"
+llm_endpoint: "llm/gemini/1.5-flash-simple"
+description: "単一プロンプトの場合、自動的にエントリポイントとして使用される"

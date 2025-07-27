@@ -104,5 +104,3 @@ class AccuracyEvaluationService:
                 results.append(result)
         
         return results
-    
-    

@@ -3,7 +3,6 @@ from typing import Dict, List, Any, Protocol
 
 from ...application.dto.accuracy_dto import FieldEvaluationDto
 
-
 class AccuracyEvaluationInterface(Protocol):
     """精度評価のインターフェース"""
     

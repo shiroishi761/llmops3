@@ -1,48 +1,48 @@
-# 実験設定ファイルの作成方法
+# 実験設定ファイルのガイドライン
 
-このディレクトリには、精度検証実験の設定ファイル（YAML形式）を配置します。
+## プロンプト設定の規約
 
-## 実験設定ファイルの構成
+### エントリポイントの指定
 
-### 必須項目
+データセット入力を受け取るプロンプト（エントリポイント）は、サービス名を `entry` にしてください。
+
 ```yaml
-experiment_name: "実験の名前"
-prompt_name: "Langfuseで管理されているプロンプト名"
-dataset_name: "Langfuseで管理されているデータセット名"
-llm_endpoint: "使用するLLMエンドポイント"
+prompts:
+  # ✅ 良い例: サービス名が entry
+  - service_name: "entry"
+    prompt_name: "invoice_extraction_prompt_v1"
+  
+  # ❌ 悪い例: エントリポイントが不明確
+  - service_name: "extraction_service"
+    prompt_name: "invoice_extraction_prompt_v1"
 ```
 
-### 任意項目
+### 単一プロンプトの場合
+
+単一プロンプトの実験では、エントリポイントの指定は不要です（自動的に使用されます）。
+
 ```yaml
-description: "実験の説明（目的、変更点など）"
+prompts:
+  - service_name: "gemini_service"
+    prompt_name: "invoice_extraction_prompt_v1"
 ```
 
-## 実験設定ファイルの例
+### エージェント型の実験
 
-### 基本的な実験
+複数プロンプトを使用する場合は、必ずエントリポイントを明示してください。
+
 ```yaml
-# experiments/invoice_test.yml
-experiment_name: "請求書抽出実験_v1"
-prompt_name: "invoice_extraction_prompt_v1"
-dataset_name: "invoice_dataset_202401"
-llm_endpoint: "extract_v1"
+prompts:
+  - service_name: "entry"  # エントリポイント
+    prompt_name: "invoice_extraction_prompt_v1"
+  - service_name: "validation"
+    prompt_name: "invoice_validation_prompt"
+  - service_name: "correction"
+    prompt_name: "invoice_correction_prompt"
 ```
 
-### 説明付きの実験
-```yaml
-# experiments/invoice_test_v2.yml
-experiment_name: "請求書抽出実験_v2_改善版"
-prompt_name: "invoice_extraction_prompt_v2"
-dataset_name: "invoice_dataset_202401"
-llm_endpoint: "extract_v1"
-description: "明細行の抽出精度を改善したプロンプトのテスト"
-```
+## 命名規約
 
-## 実験の実行
-
-作成した設定ファイルを使って実験を実行：
-```bash
-python -m src.cli run-experiment experiments/invoice_test.yml
-```
-
-実験結果は`results/`ディレクトリに自動的に保存されます。
+- **エントリポイント**: サービス名を `entry` にする
+- **後続サービス**: 処理内容を表す名前（validation, correction, enhancement など）
+- **プロンプト名**: 用途と版番号を含める（例: invoice_extraction_prompt_v1）

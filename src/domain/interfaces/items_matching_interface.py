@@ -1,7 +1,6 @@
 """明細項目マッチングサービスのインターフェース"""
 from abc import ABC, abstractmethod
-from typing import Dict, Any, Tuple
-
+from typing import Dict, Any, Tuple, List
 
 class ItemsMatchingInterface(ABC):
     """明細項目マッチングサービスのインターフェース"""
@@ -23,5 +22,25 @@ class ItemsMatchingInterface(ABC):
             Tuple[Dict[str, Any], Dict[str, Any]]: 
                 - 再配置された期待データ
                 - 再配置された抽出データ
+        """
+        pass
+    
+    @abstractmethod
+    def match_and_reorder_items(
+        self,
+        expected_items: List[Dict[str, Any]],
+        extracted_items: List[Dict[str, Any]]
+    ) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
+        """
+        itemsリストのマッチングと再配置を実行
+        
+        Args:
+            expected_items: 期待するitemsリスト
+            extracted_items: 抽出されたitemsリスト
+            
+        Returns:
+            Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]: 
+                - マッチング済みの期待items
+                - マッチング済みの抽出items
         """
         pass

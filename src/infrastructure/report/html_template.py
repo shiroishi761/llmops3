@@ -234,13 +234,13 @@ HTML_TEMPLATE = """
         </div>
         
         {% for result in results %}
-        <div class="document-result {% if result.accuracy >= 0.8 %}success{% else %}fail{% endif %}">
-            <div class="document-header {% if result.accuracy >= 0.8 %}success{% else %}fail{% endif %}">
+        <div class="document-result {% if not result.error_message %}success{% else %}fail{% endif %}">
+            <div class="document-header {% if not result.error_message %}success{% else %}fail{% endif %}">
                 <div>データセットID: {{ result.document_id }}</div>
             </div>
             
             <div class="field-comparison">
-                {% if result.is_success %}
+                {% if not result.error_message %}
                 <table class="comparison-table">
                     <thead>
                         <tr>

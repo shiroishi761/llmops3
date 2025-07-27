@@ -1,6 +1,6 @@
 """Geminiサービス"""
 import time
-from typing import Dict, Any, Union, Optional
+from typing import Dict, Any, Union, Optional, List
 import json
 import os
 
@@ -8,19 +8,23 @@ from google import genai
 from google.genai import types
 
 from ...application.services.configuration_service import ConfigurationService
-
+from ...application.services.prompt_service import PromptService
 
 class GeminiService:
     """Google Gemini APIとの連携を管理するサービス"""
     
-    def __init__(self, config_service: ConfigurationService):
+    def __init__(self, config_service: ConfigurationService, name: str = "gemini_service", prompt_service: Optional[PromptService] = None):
         """
         初期化
         
         Args:
             config_service: 設定サービス（必須）
+            name: サービス名（デフォルト: "gemini_service"）
+            prompt_service: プロンプトサービス（オプション）
         """
         self.config = config_service
+        self.name = name
+        self.prompt_service = prompt_service
         
         # 環境変数にAPI keyを設定
         os.environ["GOOGLE_API_KEY"] = self.config.gemini_api_key
@@ -35,7 +39,9 @@ class GeminiService:
         
     def extract(
         self,
-        prompt: str,
+        prompt: Optional[str] = None,
+        prompt_name: Optional[str] = None,
+        input_data: Optional[Dict[str, Any]] = None,
         model_name: Optional[str] = None,
         temperature: Optional[float] = None,
         max_tokens: Optional[int] = None,
@@ -46,7 +52,9 @@ class GeminiService:
         プロンプトを使用してデータを抽出
         
         Args:
-            prompt: 実行するプロンプト
+            prompt: 実行するプロンプト（後方互換性）
+            prompt_name: プロンプト名（プロンプトサービスから取得）
+            input_data: プロンプトに注入するデータ
             model_name: モデル名（オプション）
             temperature: 温度パラメータ（オプション）
             max_tokens: 最大トークン数（オプション）
@@ -88,13 +96,35 @@ class GeminiService:
         # 設定オブジェクトを作成
         config = types.GenerateContentConfig(**config_dict)
         
+        # プロンプトの準備
+        if prompt:
+            # 後方互換性: 直接プロンプトが渡された場合
+            final_prompt = prompt
+        elif prompt_name and self.prompt_service:
+            # プロンプト名からテンプレートを取得
+            prompt_template = self.prompt_service.get_prompt(prompt_name)
+            
+            # input_dataがあれば注入
+            if input_data:
+                final_prompt = prompt_template
+                for key, value in input_data.items():
+                    placeholder = f"{{{key}}}"
+                    if isinstance(value, str):
+                        final_prompt = final_prompt.replace(placeholder, value)
+                    else:
+                        final_prompt = final_prompt.replace(placeholder, str(value))
+            else:
+                final_prompt = prompt_template
+        else:
+            raise ValueError("プロンプトまたはプロンプト名が必要です")
+        
         start_time = time.time()
         
         try:
             # コンテンツ生成
             response = self.client.models.generate_content(
                 model=model,
-                contents=prompt,
+                contents=final_prompt,
                 config=config
             )
             
@@ -238,4 +268,3 @@ class GeminiService:
                         f.write(text)
                     # 最終的にダメな場合はエラーを投げる
                     raise RuntimeError(f"Failed to parse JSON: {str(e)}\nDebug file saved to: {debug_file}\nFirst 500 chars: {text[:500]}...")
-    

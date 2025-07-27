@@ -1,0 +1,324 @@
+input:
+  ocr_content: "# 御請求書\n\n**請求番号:** 1  \n**発行日:** 2024年11月15日\n\n## 発行者情報\n**会社名:** 消火設備工事株式会社  \n**住所:** 〒150-0001 東京都渋谷区神南1-1-1  \n**TEL:** 03-1234-5678  \n**FAX:** 03-1234-5679\n\n## 件名\n消火設備修繕工事内消火栓設備\n\n## 御請求合計金額\n**¥5,648,310-**\n\n## 明細\n\n| 商品名 | 仕様 | 単位 | 数量 | 単価 | 金額 | 備考 |\n|--------|------|------|------|------|------|------|\n| ホンプモータユニット | 1台 | 台 | 1 | 0 | 0 | 消火設備 支給品 |\n| 消防用補助高架水槽 | 3053台 | 台 | 3053 | 0 | 0 | 支給品 |\n| 消火栓箱（放水銃 | | 台 | 17 | 0 | 0 | 支給品 |\n| 消火栓箱 | 屋設置口用警 | 台 | 1 | 0 | 0 | 支給品 |\n| ボース | 25A×1 | 台 | 1 | 0 | 0 | 支給品 |\n| 仕切弁 | 10K 50A UV型 | 台 | 1 | 11,000 | 11,000 | |\n| 仕切弁 | 10K 40A UV型 | 台 | 2 | 10,400 | 20,800 | |\n| 仕切弁 | 10K 32A UV型 | 台 | 2 | 5,600 | 11,200 | |\n| 止弁 | 10K 40A 5V型 | 台 | 1 | 6,200 | 6,200 | |\n| ストレーナ | 10K 50A 消防認定品 | 台 | 1 | 15,250 | 15,250 | |\n| 仕送調整弁 | 10K 40A | 台 | 1 | 310,000 | 310,000 | |\n| プレッシブルチャージ | 25A×50A 消防認定品 | 本 | 1 | 13,300 | 13,300 | |\n| フレキシブルチャーチ | 40A×500L 消防認定品 | 本 | 7 | 5,100 | 35,700 | |\n| フレキシブルチャージ | 32A×300A | 本 | 8 | 3,850 | 30,800 | 消防認定品 |\n| フレキシブルチャージ | 25A×1500L 消防認定品 | 本 | 48 | 2,950 | 141,600 | |\n| 開閉試験弁 | 10K 40A | 台 | 1 | 18,000 | 18,000 | |\n| 開関試験弁 | 10K 50A | 台 | 1 | 26,600 | 26,600 | 消防認定品 |\n| 減圧調整弁 | 20K 250A 消防認定品 | 台 | 1 | 115,000 | 115,000 | |\n| 減圧調整弁 調整資等 | 20K 250A 消防認定品 | 式 | 1 | 185,000 | 185,000 | |\n| HTLP配管 | 20A HTUP配管（床下施工） | m | 50 | 1,440 | 72,000 | |\n| HTLP配管 | 40A HTL配管（床下施工） | m | 77 | 3,680 | 283,360 | |\n| HTLP配管 | 50A HTLP配管（床下施工） | m | 14 | 5,170 | 72,380 | |\n| HTLP配管 | 65A HTLP配管（床下施工） | m | 5 | 8,220 | 41,100 | |\n| HTLP保温(冷） | 40A HTLP配管 保温(冷） | m | 77 | 2,680 | 206,360 | |\n| HTLP保温(冷) | 50A HTLP配管 保湿(冷) | m | 14 | 3,090 | 43,260 | |\n| HTLP保湿(冷) | 65A HTLP配管保湿(冷） | m | 5 | 3,850 | 19,250 | |\n| 支持金物据工取付費 | 1式 | 式 | 1 | 110,000 | 110,000 | |\n| スリーブ・インサート工事費 | 1式 | 式 | 1 | 70,000 | 70,000 | 附属 |\n| 員搬入工具費 | 1式 | 式 | 1 | 52,000 | 52,000 | |\n| 消火栓箱 | 屋設置口用警台 | 台 | 1 | 0 | 0 | 支給品 |\n| ボース | 25A×1台 | 台 | 1 | 0 | 0 | 支給品 |\n| 諸経費 | 1式 | 式 | 1 | 3,806,310 | 3,806,310 | 材料費小計 |\n| 諸経費 | 1式 | 式 | 1 | 1,842,000 | 1,842,000 | 小計 |\n\n## 合計\n- **合計金額:** 5,648,310"
+expected_output:
+  items:
+    - name: ホンプモータユニット
+      spec: 1台
+      unit: 台
+      quantity: 1
+      price: 0
+      sub_total: 0
+      note: 消火設備
+        支給品
+      account_item: 材料費
+      items: []
+    - name: 消防用補助高架水槽
+      spec: 3053台
+      unit: 台
+      quantity: 3053
+      price: 0
+      sub_total: 0
+      note: 支給品
+      account_item: 材料費
+      items: []
+    - name: 消火栓箱（放水銃
+      spec: ''
+      unit: 台
+      quantity: 17
+      price: 0
+      sub_total: 0
+      note: 支給品
+      account_item: 材料費
+      items: []
+    - name: 消火栓箱
+      spec: 屋設置口用警
+      unit: 台
+      quantity: 1
+      price: 0
+      sub_total: 0
+      note: 支給品
+      account_item: 材料費
+      items: []
+    - name: ボース
+      spec: 25A×1
+      unit: 台
+      quantity: 1
+      price: 0
+      sub_total: 0
+      note: 支給品
+      account_item: 材料費
+      items: []
+    - name: 仕切弁
+      spec: 10K 50A UV型
+      unit: 台
+      quantity: 1
+      price: 11000
+      sub_total: 11000
+      note: ''
+      account_item: 材料費
+      items: []
+    - name: 仕切弁
+      spec: 10K 40A UV型
+      unit: 台
+      quantity: 2
+      price: 10400
+      sub_total: 20800
+      note: ''
+      account_item: 材料費
+      items: []
+    - name: 仕切弁
+      spec: 10K 32A UV型
+      unit: 台
+      quantity: 2
+      price: 5600
+      sub_total: 11200
+      note: ''
+      account_item: 材料費
+      items: []
+    - name: 止弁
+      spec: 10K 40A 5V型
+      unit: 台
+      quantity: 1
+      price: 6200
+      sub_total: 6200
+      note: ''
+      account_item: 材料費
+      items: []
+    - name: ストレーナ
+      spec: 10K 50A 消防認定品
+      unit: 台
+      quantity: 1
+      price: 15250
+      sub_total: 15250
+      note: ''
+      account_item: 材料費
+      items: []
+    - name: 仕送調整弁
+      spec: 10K 40A
+      unit: 台
+      quantity: 1
+      price: 310000
+      sub_total: 310000
+      note: ''
+      account_item: 材料費
+      items: []
+    - name: プレッシブルチャージ
+      spec: 25A×50A 消防認定品
+      unit: 本
+      quantity: 1
+      price: 13300
+      sub_total: 13300
+      note: ''
+      account_item: 材料費
+      items: []
+    - name: フレキシブルチャーチ
+      spec: 40A×500L 消防認定品
+      unit: 本
+      quantity: 7
+      price: 5100
+      sub_total: 35700
+      note: ''
+      account_item: 材料費
+      items: []
+    - name: フレキシブルチャージ
+      spec: 32A×300A
+      unit: 本
+      quantity: 8
+      price: 3850
+      sub_total: 30800
+      note: 消防認定品
+      account_item: 材料費
+      items: []
+    - name: フレキシブルチャージ
+      spec: 25A×1500L 消防認定品
+      unit: 本
+      quantity: 48
+      price: 2950
+      sub_total: 141600
+      note: ''
+      account_item: 材料費
+      items: []
+    - name: 開閉試験弁
+      spec: 10K 40A
+      unit: 台
+      quantity: 1
+      price: 18000
+      sub_total: 18000
+      note: ''
+      account_item: 材料費
+      items: []
+    - name: 開関試験弁
+      spec: 10K 50A
+      unit: 台
+      quantity: 1
+      price: 26600
+      sub_total: 26600
+      note: 消防認定品
+      account_item: 材料費
+      items: []
+    - name: 減圧調整弁
+      spec: 20K 250A 消防認定品
+      unit: 台
+      quantity: 1
+      price: 115000
+      sub_total: 115000
+      note: ''
+      account_item: 材料費
+      items: []
+    - name: 減圧調整弁 調整資等
+      spec: 20K 250A 消防認定品
+      unit: 式
+      quantity: 1
+      price: 185000
+      sub_total: 185000
+      note: ''
+      account_item: 外注費
+      items: []
+    - name: HTLP配管
+      spec: 20A HTUP配管（床下施工）
+      unit: m
+      quantity: 50
+      price: 1440
+      sub_total: 72000
+      note: ''
+      account_item: 材料費
+      items: []
+    - name: HTLP配管
+      spec: 40A HTL配管（床下施工）
+      unit: m
+      quantity: 77
+      price: 3680
+      sub_total: 283360
+      note: ''
+      account_item: 材料費
+      items: []
+    - name: HTLP配管
+      spec: 50A HTLP配管（床下施工）
+      unit: m
+      quantity: 14
+      price: 5170
+      sub_total: 72380
+      note: ''
+      account_item: 材料費
+      items: []
+    - name: HTLP配管
+      spec: 65A HTLP配管（床下施工）
+      unit: m
+      quantity: 5
+      price: 8220
+      sub_total: 41100
+      note: ''
+      account_item: 材料費
+      items: []
+    - name: HTLP保温(冷）
+      spec: 40A HTLP配管 保温(冷）
+      unit: m
+      quantity: 77
+      price: 2680
+      sub_total: 206360
+      note: ''
+      account_item: 外注費
+      items: []
+    - name: HTLP保温(冷)
+      spec: 50A HTLP配管 保湿(冷)
+      unit: m
+      quantity: 14
+      price: 3090
+      sub_total: 43260
+      note: ''
+      account_item: 外注費
+      items: []
+    - name: HTLP保湿(冷)
+      spec: 65A HTLP配管保湿(冷）
+      unit: m
+      quantity: 5
+      price: 3850
+      sub_total: 19250
+      note: ''
+      account_item: 外注費
+      items: []
+    - name: 支持金物据工取付費
+      spec: 1式
+      unit: 式
+      quantity: 1
+      price: 110000
+      sub_total: 110000
+      note: ''
+      account_item: 外注費
+      items: []
+    - name: スリーブ・インサート工事費
+      spec: 1式
+      unit: 式
+      quantity: 1
+      price: 70000
+      sub_total: 70000
+      note: 附属
+      account_item: 外注費
+      items: []
+    - name: 員搬入工具費
+      spec: 1式
+      unit: 式
+      quantity: 1
+      price: 52000
+      sub_total: 52000
+      note: ''
+      account_item: 経費
+      items: []
+    - name: 消火栓箱
+      spec: 屋設置口用警台
+      unit: 台
+      quantity: 1
+      price: 0
+      sub_total: 0
+      note: 支給品
+      account_item: 材料費
+      items: []
+    - name: ボース
+      spec: 25A×1台
+      unit: 台
+      quantity: 1
+      price: 0
+      sub_total: 0
+      note: 支給品
+      account_item: 材料費
+      items: []
+    - name: 諸経費
+      spec: 1式
+      unit: 式
+      quantity: 1
+      price: 3806310
+      sub_total: 3806310
+      note: 材料費小計
+      account_item: 経費
+      items: []
+    - name: 諸経費
+      spec: 1式
+      unit: 式
+      quantity: 1
+      price: 1842000
+      sub_total: 1842000
+      note: 小計
+      account_item: 経費
+      items: []
+  doc_type: invoice
+  doc_number: '1'
+  doc_date: ''
+  doc_title: 消火設備修繕工事
+  sub_total: 5648310
+  tax_price: null
+  total_price: null
+  tax_type: null
+  destination: ''
+  destination_customer_id: ''
+  issuer: 消火設備工事株式会社
+  issuer_customer_id: ''
+  issuer_address: ''
+  issuer_zip: ''
+  issuer_phone_number: ''
+  construction_name: ''
+  construction_site: ''
+  construction_period: ''
+  payment_terms: ''
+  expiration_date: ''
+  t_number: ''
+  doc_transaction: ''

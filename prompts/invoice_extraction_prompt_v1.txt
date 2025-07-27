@@ -1,70 +1,91 @@
-Please correct the text extracted by OCR and extract the following entities and values as key-value pairs, outputting them in valid JSON format. 
+あなたは請求書や見積書から情報を正確に抽出する専門のAIアシスタントです。
 
-IMPORTANT: Output must be valid JSON with:
-- All property names enclosed in double quotes
-- No trailing commas in objects or arrays
-- All strings properly escaped
+以下のOCRで読み取った文書から、必要な情報を抽出してJSON形式で出力してください。
 
-All fields in the output JSON are mandatory; if any key has no corresponding value, please set the value to an empty string '' to prevent any key or value from being null. If any text assumed to represent a date contains a Japanese era name, such as "令和," and is not in a four-digit year format, please convert it to the Gregorian calendar (Western calendar year). For example, "元年" should be treated as year 1, "平成1年" should start from 1989, and "令和1年" from 2019.
+## 抽出する情報:
+1. items: 明細項目のリスト（配列）
+   - name: 項目名
+   - spec: 仕様・規格
+   - unit: 単位
+   - quantity: 数量
+   - price: 単価
+   - sub_total: 小計金額
+   - note: 備考
+   - account_item: 勘定科目（材料費/外注費/経費から推定）
+   - items: 子項目のリスト（階層がある場合）
 
-OCR Content:
+2. 文書情報:
+   - doc_type: 文書タイプ（quotation/invoice）
+   - doc_number: 文書番号
+   - doc_date: 発行日（YYYY-MM-DD形式）
+   - doc_title: 文書タイトル
+   
+3. 金額情報:
+   - sub_total: 税抜合計金額
+   - tax_price: 消費税額
+   - total_price: 税込合計金額
+   - tax_type: 税区分（internal/external）
+
+4. 発行者情報:
+   - issuer: 発行者名（会社名）
+   - issuer_address: 発行者住所
+   - issuer_phone_number: 発行者電話番号
+   - issuer_zip: 発行者郵便番号
+   - issuer_customer_id: 発行者顧客ID
+
+5. 宛先情報:
+   - destination: 宛先名
+   - destination_customer_id: 宛先顧客ID
+
+6. 工事情報（該当する場合）:
+   - construction_name: 工事名
+   - construction_site: 工事場所
+   - construction_period: 工期
+
+7. その他:
+   - payment_terms: 支払条件
+   - expiration_date: 有効期限
+   - t_number: T番号（インボイス番号）
+   - doc_transaction: 取引種別
+
+## 注意事項:
+- 存在しない項目は空文字列 "" として出力
+- 金額は数値型で出力（カンマなし）
+- 日付はYYYY-MM-DD形式に変換
+- 勘定科目は内容から推定して「材料費」「外注費」「経費」のいずれかを設定
+
+## OCR読み取り結果:
 {ocr_content}
 
-Please output the following structure with all fields:
-- doc_transaction
-- doc_title
-- doc_type
-- doc_number
-- doc_date
-- destination
-- destination_customer_id
-- issuer
-- issuer_phone_number
-- issuer_zip
-- issuer_customer_id
-- issuer_address
-- t_number
-- sub_total
-- tax_price
-- total_price
-- tax_type
-- construction_name
-- construction_site
-- construction_period
-- payment_terms
-- expiration_date
-- items (array)
+## 出力形式:
+以下の構造でJSON形式で出力してください。すべてのフィールドを含めてください：
 
-Important rules:
+```json
+{
+  "items": [...],
+  "doc_type": "quotation または invoice",
+  "doc_number": "文書番号",
+  "doc_date": "YYYY-MM-DD",
+  "doc_title": "文書タイトル",
+  "doc_transaction": "取引種別",
+  "sub_total": 税抜合計金額（数値）,
+  "tax_price": 消費税額（数値）,
+  "total_price": 税込合計金額（数値）,
+  "tax_type": "internal または external",
+  "issuer": "発行者名",
+  "issuer_address": "発行者住所",
+  "issuer_phone_number": "発行者電話番号",
+  "issuer_zip": "発行者郵便番号",
+  "issuer_customer_id": "発行者顧客ID",
+  "destination": "宛先名",
+  "destination_customer_id": "宛先顧客ID",
+  "construction_name": "工事名",
+  "construction_site": "工事場所",
+  "construction_period": "工期",
+  "payment_terms": "支払条件",
+  "expiration_date": "有効期限",
+  "t_number": "T番号"
+}
+```
 
-1. 'doc_type' must be one of: 'quotation', 'invoice', 'receipt', or 'unknown'
-2. 'doc_number' is the document issue number (e.g., "No.1" → "1")
-3. Remove all spaces from numbers (e.g., "¥446, 862" → "¥446862")
-4. 'tax_type' must be either 'external' (外税/消費税) or 'internal' (内税)
-5. All price fields must be integers (no decimals)
-6. Date format must be 'yyyy-mm-dd'
-
-For 'items' array, each item must have these fields:
-- name (string)
-- quantity (number, default 1)
-- price (number)
-- sub_total (number)
-- unit (string)
-- spec (string)
-- note (string)
-- account_item (string)
-- items (array, for sub-items)
-
-Item rules:
-- Do not include summary items like "小計", "合計", "総合計", "税金", "消費税" as individual items
-- If quantity is missing, set it to 1
-- If price is missing but sub_total exists, calculate: price = sub_total / quantity
-- For discount items (値引き, 割引, etc.), make price and sub_total negative values
-- 'account_item' should be one of: '外注費', '材料費', '経費', '労務費', 'その他'
-  - Items ending with "工事", "施工", "作業", "設置" → '外注費'
-  - Physical materials and supplies → '材料費'
-  - General expenses → '経費'
-  - Labor costs → '労務費'
-  - Others → 'その他'
-
-Extract all information from the OCR content and fill in the JSON structure above.
+存在しない項目は空文字列 "" またはnullとして出力してください。

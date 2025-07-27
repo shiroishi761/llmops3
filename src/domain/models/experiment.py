@@ -1,9 +1,9 @@
 """実験エンティティ"""
 from dataclasses import dataclass, field
 from typing import List, Optional, Dict, Any
+from .prompt_config import PromptConfig
 from datetime import datetime
 from enum import Enum
-
 
 class ExperimentStatus(Enum):
     """実験のステータス"""
@@ -20,7 +20,7 @@ class Experiment:
     Attributes:
         id: 実験ID
         name: 実験名
-        prompt_name: 使用するプロンプト名（Langfuse）
+        prompts: 使用するサービスとプロンプトのリスト [{"service_name": "...", "prompt_name": "..."}]
         dataset_name: 使用するデータセット名（Langfuse）
         llm_endpoint: 使用するLLMエンドポイント
         description: 実験の説明
@@ -32,7 +32,7 @@ class Experiment:
     """
     id: str
     name: str
-    prompt_name: str = ""
+    prompts: List[PromptConfig] = field(default_factory=list)
     dataset_name: str = ""
     llm_endpoint: str = ""
     description: Optional[str] = None
@@ -176,8 +176,6 @@ class Experiment:
         for result in self.results:
             result_dict = {
                 "document_id": result.document_id,
-                "expected_data": result.expected_data,
-                "extracted_data": result.extracted_data,
                 "field_results": [
                     {
                         "field_name": fr.field_name,
@@ -195,10 +193,13 @@ class Experiment:
             }
             results_data.append(result_dict)
         
+        # 後方互換性のため、prompt_nameを設定（最初のプロンプト名）
+        prompt_name = self.prompts[0].prompt_name if self.prompts else ""
+        
         return ExperimentDto(
             id=self.id,
             name=self.name,
-            prompt_name=self.prompt_name,
+            prompt_name=prompt_name,  # 後方互換性のため維持
             dataset_name=self.dataset_name,
             llm_endpoint=self.llm_endpoint,
             description=self.description,
@@ -207,5 +208,9 @@ class Experiment:
             created_at=self.created_at,
             started_at=getattr(self, 'started_at', None),  # 存在しない場合はNone
             completed_at=self.completed_at,
-            error_message=self.metadata.get("error")
+            error_message=self.metadata.get("error"),
+            prompt_configuration={
+                "type": "multi_prompt", 
+                "prompts": [{"llm_name": p.llm_name, "prompt_name": p.prompt_name} for p in self.prompts]
+            }
         )

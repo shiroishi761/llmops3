@@ -6,9 +6,7 @@ import logging
 
 from ..interfaces.items_matching_interface import ItemsMatchingInterface
 
-
 logger = logging.getLogger(__name__)
-
 
 class ItemsMatchingService(ItemsMatchingInterface):
     """明細項目の高度なマッチングを行うサービス"""
@@ -16,6 +14,30 @@ class ItemsMatchingService(ItemsMatchingInterface):
     def __init__(self, gemini_service):
         self.gemini_service = gemini_service
     
+    def match_and_reorder_items(
+        self,
+        expected_items: List[Dict[str, Any]],
+        extracted_items: List[Dict[str, Any]]
+    ) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
+        """
+        itemsリストのマッチングと再配置を実行
+        
+        Args:
+            expected_items: 期待するitemsリスト
+            extracted_items: 抽出されたitemsリスト
+            
+        Returns:
+            Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]: 
+                - マッチング済みの期待items
+                - マッチング済みの抽出items
+        """
+        # process_matched_itemsを使用してマッチング処理
+        dummy_expected = {"items": expected_items}
+        dummy_extracted = {"items": extracted_items}
+        
+        matched_expected, matched_extracted = self.process_matched_items(dummy_expected, dummy_extracted)
+        
+        return matched_expected["items"], matched_extracted["items"]
     
     def process_matched_items(
         self,

@@ -5,7 +5,6 @@ import re
 from datetime import datetime
 from ...application.dto.accuracy_dto import FieldEvaluationDto
 
-
 class FieldScoreCalculator(ABC):
     """フィールドスコア計算の基底クラス"""
     
@@ -26,14 +25,13 @@ class FieldScoreCalculator(ABC):
         """
         pass
 
-
 class SimpleFieldCalculator(FieldScoreCalculator):
     """単純な文字列比較による計算"""
     
     def calculate(self, field_name: str, expected: Any, actual: Any, weight: float, item_index: Optional[int] = None) -> FieldEvaluationDto:
         """文字列として比較し、完全一致で正解"""
         is_correct = self._is_match(expected, actual)
-        score = weight if is_correct else 0.0
+        score = 1.0 if is_correct else 0.0  # スコアは0〜1の範囲
         
         return FieldEvaluationDto(
             field_name=field_name,
@@ -58,14 +56,13 @@ class SimpleFieldCalculator(FieldScoreCalculator):
         
         return expected_str == actual_str
 
-
 class AmountFieldCalculator(FieldScoreCalculator):
     """金額フィールド専用の計算"""
     
     def calculate(self, field_name: str, expected: Any, actual: Any, weight: float, item_index: Optional[int] = None) -> FieldEvaluationDto:
         """金額として比較"""
         is_correct = self._is_amount_match(expected, actual)
-        score = weight if is_correct else 0.0
+        score = 1.0 if is_correct else 0.0  # スコアは0〜1の範囲
         
         return FieldEvaluationDto(
             field_name=field_name,
@@ -105,7 +102,6 @@ class AmountFieldCalculator(FieldScoreCalculator):
         
         return float(value_str)
 
-
 class DateFieldCalculator(FieldScoreCalculator):
     """日付フィールド専用の計算"""
     
@@ -120,7 +116,7 @@ class DateFieldCalculator(FieldScoreCalculator):
     def calculate(self, field_name: str, expected: Any, actual: Any, weight: float, item_index: Optional[int] = None) -> FieldEvaluationDto:
         """日付として比較"""
         is_correct = self._is_date_match(expected, actual)
-        score = weight if is_correct else 0.0
+        score = 1.0 if is_correct else 0.0  # スコアは0〜1の範囲
         
         return FieldEvaluationDto(
             field_name=field_name,
@@ -162,8 +158,6 @@ class DateFieldCalculator(FieldScoreCalculator):
                 continue
         
         raise ValueError(f"日付形式を解析できません: {value_str}")
-
-
 
 class FieldScoreCalculatorFactory:
     """フィールドに応じて適切なCalculatorを選択するFactory"""

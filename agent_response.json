@@ -1,0 +1,67 @@
+{
+  "success": true,
+  "data": {
+    "data": {
+      "items": [
+        {
+          "name": "仮設浄水",
+          "spec": "",
+          "unit": "㎡",
+          "quantity": 357.6,
+          "price": 150,
+          "sub_total": 53640,
+          "note": "*数量のほうんでいません、現地も一個に役済資します。",
+          "items": []
+        }
+      ],
+      "doc_type": "quotation",
+      "doc_number": "00001462",
+      "doc_date": "2024-10-06",
+      "doc_title": "御見積書",
+      "doc_transaction": "",
+      "sub_total": 1463369,
+      "tax_price": null,
+      "total_price": 1463369,
+      "tax_type": null,
+      "issuer": "株式会社グラフト",
+      "issuer_address": "〒619-0241 京都府相楽郡精華町祝園狛ヶ坪5番地",
+      "issuer_phone_number": "",
+      "issuer_zip": "619-0241",
+      "issuer_customer_id": "",
+      "destination": "萩森様",
+      "destination_customer_id": "",
+      "construction_name": "",
+      "construction_site": "",
+      "construction_period": "",
+      "payment_terms": "",
+      "expiration_date": "",
+      "t_number": ""
+    },
+    "execution_time_ms": 3326,
+    "usage": {
+      "prompt_tokens": 1068,
+      "completion_tokens": 389,
+      "total_tokens": 1457
+    }
+  },
+  "extraction_time_ms": 7739,
+  "error": null,
+  "endpoint": "llm/agent/invoice-with-validation",
+  "model_settings": {
+    "agent_type": "multi_prompt_workflow",
+    "workflow_steps": [
+      "extraction",
+      "react_evaluation"
+    ],
+    "models_used": {
+      "extraction": "gemini-1.5-flash",
+      "react_evaluation": "gemini-1.5-flash"
+    },
+    "react_process": {
+      "thought": "OCR内容と抽出結果を比較し、明らかな誤りを修正します。具体的には、明細部分の金額計算が間違っており、`account_item`フィールドが追加されている点に注目します。OCR内容から、`account_item`は明示的に記載されておらず、推測で追加されているため、削除します。また、金額計算はOCR内容に基づき修正します。備考欄の記述はそのまま残します。",
+      "action": "correct",
+      "needs_correction": true
+    }
+  },
+  "thinking_process": null
+}

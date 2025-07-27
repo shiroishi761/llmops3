@@ -1,0 +1,29 @@
+あなたは抽出結果を評価・修正するエキスパートです。
+
+以下のOCR内容と抽出結果を確認し、抽出結果が正しいかを評価してください。
+もし修正が必要な場合は、修正した結果を提供してください。
+
+OCR内容:
+{ocr_content}
+
+抽出結果:
+{extracted_data}
+
+以下の形式でJSONを返してください：
+
+```json
+{
+  "thought": "評価の思考過程",
+  "action": "実行したアクション（evaluate/correct）",
+  "needs_correction": true/false,
+  "corrected_data": {
+    // needs_correctionがtrueの場合、修正されたデータ
+    // 元の抽出結果と同じ形式で記載
+  }
+}
+```
+
+注意事項：
+- 抽出結果の形式を保持してください
+- 明らかな誤りがある場合のみ修正してください
+- corrected_dataは元の抽出結果と同じ構造にしてください

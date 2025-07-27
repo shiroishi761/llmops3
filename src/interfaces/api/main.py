@@ -24,10 +24,7 @@ app.add_middleware(
 app.include_router(experiment_router)
 app.include_router(llm_router)
 
-
 @app.get("/")
 async def root():
     """ヘルスチェック"""
     return {"status": "healthy", "service": "LLMOps Accuracy Platform"}
-
-

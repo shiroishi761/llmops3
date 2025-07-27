@@ -15,11 +15,9 @@ from ...infrastructure.external_services.gemini_service import GeminiService
 
 router = APIRouter(prefix="/api/experiments", tags=["experiments"])
 
-
 class RunExperimentRequest(BaseModel):
     """実験実行リクエスト"""
     experiment_name: str
-
 
 class RunExperimentResponse(BaseModel):
     """実験実行レスポンス"""
@@ -27,7 +25,6 @@ class RunExperimentResponse(BaseModel):
     status: str
     summary: Dict[str, Any]
     result_file_path: str
-
 
 @router.post("/run", 
 response_model=RunExperimentResponse)

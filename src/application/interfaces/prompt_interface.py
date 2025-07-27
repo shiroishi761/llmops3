@@ -1,6 +1,6 @@
 """プロンプトサービスのインターフェース"""
-from typing import List, Protocol
-
+from typing import List, Protocol, Optional
+from ...domain.models.prompt_config import PromptConfig
 
 class PromptInterface(Protocol):
     """プロンプト管理のインターフェース"""
@@ -38,5 +38,17 @@ class PromptInterface(Protocol):
             
         Returns:
             存在するかどうか
+        """
+        ...
+    
+    def find_entry_prompt(self, prompts_config: List[PromptConfig]) -> Optional[PromptConfig]:
+        """
+        エントリポイントとなるプロンプトを探す
+        
+        Args:
+            prompts_config: プロンプト設定のリスト
+            
+        Returns:
+            エントリポイントのプロンプト設定、または None
         """
         ...

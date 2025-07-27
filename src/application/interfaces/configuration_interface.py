@@ -1,6 +1,6 @@
 """設定サービスのインターフェース"""
-from typing import Dict, Any, Optional, Protocol
-
+from typing import Dict, Any, Optional, Protocol, List
+from ...domain.models.prompt_config import PromptConfig
 
 class ConfigurationInterface(Protocol):
     """設定管理のインターフェース"""
@@ -37,6 +37,18 @@ class ConfigurationInterface(Protocol):
         Raises:
             FileNotFoundError: 設定ファイルが見つからない場合
             ValueError: 指定された実験名が見つからない場合
+        """
+        ...
+    
+    def get_prompt_config(self, experiment_config: Dict[str, Any]) -> List[PromptConfig]:
+        """
+        実験設定からプロンプト設定を取得
+        
+        Args:
+            experiment_config: 実験設定の辞書
+            
+        Returns:
+            PromptConfigのリスト
         """
         ...
     

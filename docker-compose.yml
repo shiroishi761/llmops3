@@ -1,6 +1,24 @@
 version: '3.8'
 
 services:
+  # PostgreSQLデータベース
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: llmops_db
+      POSTGRES_USER: llmops
+      POSTGRES_PASSWORD: llmops_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./db/init:/docker-entrypoint-initdb.d
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U llmops"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
   app:
     build: .
     volumes:
@@ -12,6 +30,11 @@ services:
     ports:
       - "8000:8000"
     command: python -m uvicorn src.interfaces.api.main:app --reload --host 0.0.0.0 --port 8000
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      - DATABASE_URL=postgresql://llmops:llmops_password@db:5432/llmops_db
     
   # CLIモードで実験を実行する場合
   cli:
@@ -26,3 +49,11 @@ services:
     command: python -m src.cli
     profiles:
       - cli
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      - DATABASE_URL=postgresql://llmops:llmops_password@db:5432/llmops_db
+
+volumes:
+  postgres_data:

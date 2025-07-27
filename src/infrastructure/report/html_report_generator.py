@@ -8,7 +8,6 @@ import json
 
 from .html_template import HTML_TEMPLATE
 
-
 class HTMLReportGenerator:
     """実験結果のHTMLレポートを生成するサービス"""
     
@@ -46,7 +45,33 @@ class HTMLReportGenerator:
     
     def _prepare_context(self, experiment_data: Dict[str, Any]) -> Dict[str, Any]:
         """テンプレート用のコンテキストデータを準備"""
-        summary = experiment_data.get('summary', {})
+        # summaryがない場合は結果から計算
+        if 'summary' not in experiment_data:
+            results = experiment_data.get('results', [])
+            successful_count = len([r for r in results if not r.get('error_message')])
+            failed_count = len([r for r in results if r.get('error_message')])
+            
+            # 全体精度を計算
+            total_score = 0
+            total_weight = 0
+            for result in results:
+                if 'field_results' in result and result['field_results']:
+                    for fr in result['field_results']:
+                        score = fr.get('score', 0)
+                        weight = fr.get('weight', 0)
+                        total_score += score * weight
+                        total_weight += weight
+            
+            overall_accuracy = total_score / total_weight if total_weight > 0 else 0.0
+            
+            summary = {
+                'total_documents': len(results),
+                'successful_count': successful_count,
+                'failed_count': failed_count,
+                'overall_accuracy': overall_accuracy
+            }
+        else:
+            summary = experiment_data.get('summary', {})
         
         # 結果データを処理
         results = []
@@ -66,8 +91,14 @@ class HTMLReportGenerator:
             # 新しいDTOベースの形式から精度を計算
             if 'field_results' in processed_result and processed_result['field_results']:
                 # field_resultsから精度を計算
-                total_score = sum(fr.get('score', 0) for fr in processed_result['field_results'])
-                total_weight = sum(fr.get('weight', 0) for fr in processed_result['field_results'])
+                total_score = 0
+                total_weight = 0
+                for fr in processed_result['field_results']:
+                    score = fr.get('score', 0)
+                    weight = fr.get('weight', 0)
+                    # スコアは0〜1の範囲で、重みを掛けて加算
+                    total_score += score * weight
+                    total_weight += weight
                 accuracy = total_score / total_weight if total_weight > 0 else 0.0
                 processed_result['accuracy'] = accuracy
                 processed_result['accuracy_formatted'] = "{:.1f}".format(accuracy * 100)
@@ -89,6 +120,9 @@ class HTMLReportGenerator:
                 processed_result['accuracy'] = 0.0
                 processed_result['accuracy_formatted'] = "0.0"
                 processed_result['accuracy_metrics'] = []
+            
+            # 成功/失敗の判定を追加
+            processed_result['is_success'] = not result.get('error_message')
             
             # accuracy_metricsを処理して、フィールドを固定順序で並べ替える
             if 'accuracy_metrics' in processed_result:
@@ -129,25 +163,9 @@ class HTMLReportGenerator:
         overall_accuracy = summary.get('overall_accuracy', 0)
         overall_accuracy_formatted = "{:.1f}".format(overall_accuracy * 100)
         
-        # 全体スコアを計算
-        overall_score = 0.0
-        max_possible_score = 0.0
-        
-        if 'field_scores' in summary and summary['field_scores']:
-            total_score = 0.0
-            for field, scores in summary['field_scores'].items():
-                weight = scores.get('weight', 0.0)
-                score = scores.get('score', 0.0)
-                # 現在のスコア: 重み × 一致度（0〜1）
-                total_score += weight * score
-                # 最大可能スコア: 重みの合計
-                max_possible_score += weight
-                
-            overall_score = total_score
-        else:
-            # field_scoresがない場合は、精度を使用
-            overall_score = overall_accuracy * 100
-            max_possible_score = 100
+        # 全体スコアを計算（正規化されたスコア）
+        overall_score = overall_accuracy * 100  # 0〜100のパーセンテージ
+        max_possible_score = 100.0
         
         # フィールド精度をフォーマット
         field_accuracies = {}

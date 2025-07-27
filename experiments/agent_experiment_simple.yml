@@ -1,0 +1,10 @@
+# シンプルなエージェント実験設定
+experiment_name: "請求書ReActエージェント実験"
+prompts:
+  - llm_name: "extraction_service"
+    prompt_name: "invoice_extraction_prompt_v1"
+  - llm_name: "validation_service"
+    prompt_name: "react_evaluation_prompt"
+dataset_name: "fire_equipment_invoice"
+llm_endpoint: "llm/agent/invoice-with-validation"
+description: "ReActパターンを使用したシンプルな検証・修正エージェント"

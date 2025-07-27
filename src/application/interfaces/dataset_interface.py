@@ -1,7 +1,6 @@
 """データセットサービスのインターフェース"""
 from typing import List, Dict, Any, Protocol
 
-
 class DatasetInterface(Protocol):
     """データセット管理のインターフェース"""
     

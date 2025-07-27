@@ -6,7 +6,7 @@ from typing import Optional
 
 from ...application.dto.experiment_dto import ExperimentDto
 from ...domain.repositories.experiment_repository import ExperimentRepository
-
+from ...application.utils.result_formatter import format_experiment_results
 
 class FileExperimentRepository(ExperimentRepository):
     """ファイルシステムに実験を保存するリポジトリ"""
@@ -41,9 +41,12 @@ class FileExperimentRepository(ExperimentRepository):
         # 実験データを辞書に変換
         data = self._experiment_dto_to_dict(experiment_dto)
         
+        # 構造化された形式に変換
+        formatted_data = format_experiment_results(data)
+        
         # JSONファイルとして保存
         with open(filepath, "w", encoding="utf-8") as f:
-            json.dump(data, f, ensure_ascii=False, indent=2)
+            json.dump(formatted_data, f, ensure_ascii=False, indent=2)
             
         return filepath
     
@@ -74,5 +77,6 @@ class FileExperimentRepository(ExperimentRepository):
             "created_at": experiment_dto.created_at.isoformat(),
             "started_at": experiment_dto.started_at.isoformat() if experiment_dto.started_at else None,
             "completed_at": experiment_dto.completed_at.isoformat() if experiment_dto.completed_at else None,
-            "error_message": experiment_dto.error_message
+            "error_message": experiment_dto.error_message,
+            "prompt_configuration": experiment_dto.prompt_configuration
         }

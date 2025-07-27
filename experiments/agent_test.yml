@@ -1,0 +1,10 @@
+# エージェントエンドポイントの実験
+experiment_name: "エージェント抽出テスト"
+prompts:
+  - llm_name: "extraction_service"
+    prompt_name: "invoice_extraction_prompt_v1"
+  - llm_name: "validation_service"
+    prompt_name: "react_evaluation_prompt"
+dataset_name: "fire_equipment_invoice"
+llm_endpoint: "llm/agent/invoice-with-validation"
+description: "エージェントによる抽出と検証の実験"

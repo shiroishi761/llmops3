@@ -2,7 +2,6 @@
 from dataclasses import dataclass, field
 from typing import Optional, Any, List, Dict
 
-
 @dataclass(frozen=True)
 class FieldEvaluationResult:
     """
@@ -98,7 +97,6 @@ class FieldEvaluationResult:
         if self.item_index is not None:
             return f"{self.field_name}[{self.item_index}]"
         return self.field_name
-
 
 class FieldEvaluationResultCollection:
     """FieldEvaluationResultのコレクション管理"""

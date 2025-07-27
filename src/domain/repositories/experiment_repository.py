@@ -5,7 +5,6 @@ from pathlib import Path
 
 from ...application.dto.experiment_dto import ExperimentDto
 
-
 class ExperimentRepository(ABC):
     """実験リポジトリのインターフェース"""
     

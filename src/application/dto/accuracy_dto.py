@@ -2,7 +2,6 @@
 from dataclasses import dataclass
 from typing import List, Any
 
-
 @dataclass
 class FieldEvaluationDto:
     """フィールド評価結果のDTO"""
@@ -27,13 +26,10 @@ class FieldEvaluationDto:
             item_index=self.item_index
         )
 
-
 @dataclass
 class DocumentEvaluationDto:
     """ドキュメント評価結果のDTO"""
     document_id: str
-    expected_data: dict
-    extracted_data: dict
     field_results: List[FieldEvaluationDto]
     extraction_time_ms: int = 0
     error: str = None
@@ -44,8 +40,6 @@ class DocumentEvaluationDto:
         domain_field_results = [dto.to_domain_model() for dto in self.field_results]
         return DocumentEvaluationResult(
             document_id=self.document_id,
-            expected_data=self.expected_data,
-            extracted_data=self.extracted_data,
             field_results=domain_field_results,
             extraction_time_ms=self.extraction_time_ms,
             error=self.error
